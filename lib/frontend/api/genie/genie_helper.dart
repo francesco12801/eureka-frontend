@@ -10,7 +10,7 @@ import 'package:eureka_final_version/frontend/models/genie.dart';
 class GenieHelper {
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
-  static final String genieAPI = dotenv.env['GENIE_API_URL'] ?? '';
+  static final String genieAPI = dotenv.env['GENIE_API_AUTH'] ?? '';
 
   Future<GenieResponse> createGenie(Genie genieData) async {
     final url = '$genieAPI/create';

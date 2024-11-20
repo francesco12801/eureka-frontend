@@ -1,14 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
 class UserHelper {
   // URLs for the spring server and node server
-  static const String springURL = 'http://localhost:8080/api/user';
-  static const String nodeURL = 'https://localhost:8070/login';
-  static const String imageEndpoint = 'http://localhost:8080/api/edit-profile';
+  static final String genieApiUser = dotenv.env['SPRING_API_USER'] ?? '';
+  static final String editProfile = dotenv.env['SPRING_API_EDIT_PROFILE'] ?? '';
 
   // Instance of FlutterSecureStorage
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
@@ -18,7 +18,7 @@ class UserHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response =
-          await http.post(Uri.parse('$springURL/getProfileImage'), headers: {
+          await http.post(Uri.parse('$genieApiUser/getProfileImage'), headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       });
@@ -42,7 +42,8 @@ class UserHelper {
     // Make a get request to the spring server to get profile name of the user
     try {
       final token = await _secureStorage.read(key: 'auth_token');
-      final response = await http.post(Uri.parse('$springURL/getBannerImage'),
+      final response = await http.post(
+          Uri.parse('$genieApiUser/getBannerImage'),
           headers: {'Authorization': 'Bearer $token'});
 
       final Map<String, dynamic> imageResponse = json.decode(response.body);
@@ -63,7 +64,7 @@ class UserHelper {
   Future<String> getEmail() async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
-      final response = await http.post(Uri.parse('$springURL/get-email'),
+      final response = await http.post(Uri.parse('$genieApiUser/get-email'),
           headers: {'Authorization': 'Bearer $token'});
 
       final Map<String, dynamic> emailResponse = json.decode(response.body);
@@ -83,7 +84,7 @@ class UserHelper {
   Future<String> getAddress() async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
-      final response = await http.post(Uri.parse('$springURL/get-address'),
+      final response = await http.post(Uri.parse('$genieApiUser/get-address'),
           headers: {'Authorization': 'Bearer $token'});
 
       final Map<String, dynamic> addressResponse = json.decode(response.body);
@@ -108,7 +109,7 @@ class UserHelper {
       final token = await _secureStorage.read(key: 'auth_token');
       debugPrint('Token: $token');
       final request = http.MultipartRequest(
-          'POST', Uri.parse('$imageEndpoint/changeProfileImage'));
+          'POST', Uri.parse('$editProfile/changeProfileImage'));
       request.headers['Authorization'] = 'Bearer $token';
       request.headers['Content-Type'] = 'multipart/form-data';
       if (imageProfile != null) {
@@ -146,7 +147,7 @@ class UserHelper {
       final token = await _secureStorage.read(key: 'auth_token');
       debugPrint('Token: $token');
       final request = http.MultipartRequest(
-          'POST', Uri.parse('$imageEndpoint/changeBannerImage'));
+          'POST', Uri.parse('$editProfile/changeBannerImage'));
       request.headers.addAll({
         'Authorization': 'Bearer $token',
         'Content-Type': 'multipart/form-data',
@@ -187,8 +188,8 @@ class UserHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       // Create a multipart request
-      var request = http.MultipartRequest(
-          'POST', Uri.parse('$imageEndpoint/uploadImages'));
+      var request =
+          http.MultipartRequest('POST', Uri.parse('$editProfile/uploadImages'));
       debugPrint('Token: $token');
       request.headers['Authorization'] = 'Bearer $token';
       request.headers['Content-Type'] = 'multipart/form-data';

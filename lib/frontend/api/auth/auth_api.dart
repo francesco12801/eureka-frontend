@@ -14,7 +14,7 @@ import 'package:flutter/foundation.dart';
 // const middleware = 'http://192.168.1.235:8070';
 
 class AuthHelper {
-  static final String urlSpring = dotenv.env['SPRING_API_URL'] ?? '';
+  static final String urlSpring = dotenv.env['SPRING_API_AUTH'] ?? '';
   static final String middleware = dotenv.env['MIDDLEWARE_API_URL'] ?? '';
   // Check if the token is valid
   Future<bool> checkToken(String token) async {
