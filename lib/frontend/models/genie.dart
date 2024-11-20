@@ -1,134 +1,136 @@
 class Genie {
+  // Constants
   final String? id;
+  final String? userId;
   final String title;
+  final String description;
+  final String? location;
+  final int? createdAt;
+  final String nameSurnameCreator;
+  final String target;
+
+  // Nullable fields
+  final List<String>? videos;
+  final List<String>? images;
+  final List<String>? files;
+  final List<String>? collaborators;
+  final List<String>? tags;
+  final String? professionUser;
+  final String? profileImageUser;
   final int likes;
   final int comments;
   final int saved;
-  final String description;
-  final String target;
-  final String? location;
-  final String? images;
-  final String? videos;
-  final String? files;
-  final String nameSurnameUser;
-  final String professionUser;
-  final List<String>? collaborators;
-  final List<String>? tags;
-  final String? createdAt;
-  final String? license;
-  // uid of user who created the genie
-  // image picture of the user
-  // nameSurname name and surname of the user
-  // the above fiels must be taken from the backend not fetched here --> I have to change.
 
-  Genie(
-      {this.id,
-      required this.title,
-      required this.description,
-      required this.target,
-      this.likes = 0,
-      this.comments = 0,
-      this.saved = 0,
-      this.location,
-      this.images,
-      this.videos,
-      this.files,
-      required this.license,
-      required this.nameSurnameUser,
-      required this.professionUser,
-      this.collaborators,
-      this.tags,
-      this.createdAt});
+  // Constructor
+  Genie({
+    this.id,
+    this.userId,
+    required this.title,
+    required this.description,
+    this.location,
+    this.createdAt,
+    required this.nameSurnameCreator,
+    required this.target,
+    this.videos,
+    this.images,
+    this.files,
+    this.collaborators,
+    this.tags,
+    this.professionUser,
+    this.profileImageUser,
+    this.likes = 0,
+    this.comments = 0,
+    this.saved = 0,
+  });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'title': title,
-      'description': description,
-      'target': target,
-      'location': location,
-      'images': images,
-      'likes': likes,
-      'comments': comments,
-      'saved': saved,
-      'videos': videos,
-      'files': files,
-      'license': license,
-      'nameSurnameUser': nameSurnameUser,
-      'professionUser': professionUser,
-      'collaborators': collaborators,
-      'tags': tags,
-      'createdAt': createdAt,
-    };
-  }
-
-  factory Genie.fromMap(Map<String, dynamic> map) {
+  // Factory constructor to create a Genie instance from a map
+  factory Genie.fromMap(Map<String, dynamic> data) {
     return Genie(
-      id: map['id'] as String?,
-      title: map['title'] as String,
-      description: map['description'] as String,
-      target: map['target'] as String,
-      location: map['location'] as String?,
-      likes: map['likes'] as int,
-      comments: map['comments'] as int,
-      saved: map['saved'] as int,
-      images: map['images'] as String?,
-      videos: map['videos'] as String?,
-      files: map['files'] as String?,
-      license: map['license'] as String,
-      nameSurnameUser: map['nameSurnameUser'] as String,
-      professionUser: map['professionUser'] as String,
-      collaborators: map['collaborators'] != null
-          ? (map['collaborators'] is String
-              ? (map['collaborators'] as String).split(', ')
-              : List<String>.from(map['collaborators'] as List))
-          : [],
-      tags: map['tags'] != null
-          ? (map['tags'] is String
-              ? (map['tags'] as String).split(', ')
-              : List<String>.from(map['tags'] as List))
-          : [],
-      createdAt: map['createdAt'] as String?,
+      id: data['id'] as String? ?? '', // Provide a default value if null
+      userId: data['userId'] as String? ?? '',
+      title: data['title'] as String? ?? '',
+      description: data['description'] as String? ?? '',
+      location: data['location'] as String? ?? '',
+      createdAt: data['createdAt'] as int? ?? 0,
+      nameSurnameCreator: data['nameSurnameCreator'] as String? ?? '',
+      target: data['target'] as String? ?? '',
+      videos: (data['videos'] as List<dynamic>?)?.cast<String>(),
+      images: (data['images'] as List<dynamic>?)?.cast<String>(),
+      files: (data['files'] as List<dynamic>?)?.cast<String>(),
+      collaborators: (data['collaborators'] as List<dynamic>?)?.cast<String>(),
+      tags: (data['tags'] as List<dynamic>?)?.cast<String>(),
+      professionUser: data['professionUser'] as String?, // Nullable field
+      profileImageUser: data['profileImageUser'] as String?, // Nullable field
+      likes: data['likes'] as int? ?? 0,
+      comments: data['comments'] as int? ?? 0,
+      saved: data['saved'] as int? ?? 0,
     );
   }
 
+  // Method to convert a Genie instance to a map
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'userId': userId,
+      'title': title,
+      'description': description,
+      'location': location,
+      'createdAt': createdAt,
+      'nameSurnameCreator': nameSurnameCreator,
+      'target': target,
+      'videos': videos,
+      'images': images,
+      'files': files,
+      'collaborators': collaborators,
+      'tags': tags,
+      'professionUser': professionUser,
+      'profileImageUser': profileImageUser,
+      'likes': likes,
+      'comments': comments,
+      'saved': saved,
+    };
+  }
+
+  // CopyWith method
   Genie copyWith({
     String? id,
-    String? userID,
+    String? userId,
     String? title,
     String? description,
-    String? target,
     String? location,
-    String? images,
+    int? createdAt,
+    String? nameSurnameCreator,
+    String? target,
+    List<String>? videos,
+    List<String>? images,
+    List<String>? files,
+    List<String>? collaborators,
+    List<String>? tags,
+    String? professionUser,
+    String? profileImageUser,
     int? likes,
     int? comments,
     int? saved,
-    String? videos,
-    String? files,
-    String? license,
-    String? nameSurnameUser,
-    String? professionUser,
-    List<String>? collaborators,
-    List<String>? tags,
-    String? createdAt,
   }) {
     return Genie(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       title: title ?? this.title,
       description: description ?? this.description,
-      target: target ?? this.target,
       location: location ?? this.location,
+      createdAt: createdAt ?? this.createdAt,
+      nameSurnameCreator: nameSurnameCreator ?? this.nameSurnameCreator,
+      target: target ?? this.target,
+      videos: videos ?? this.videos,
       images: images ?? this.images,
+      files: files ?? this.files,
+      collaborators: collaborators ?? this.collaborators,
+      tags: tags ?? this.tags,
+      professionUser: professionUser ?? this.professionUser,
+      profileImageUser: profileImageUser ?? this.profileImageUser,
       likes: likes ?? this.likes,
       comments: comments ?? this.comments,
       saved: saved ?? this.saved,
-      videos: videos ?? this.videos,
-      files: files ?? this.files,
-      license: license ?? this.license,
-      nameSurnameUser: nameSurnameUser ?? this.nameSurnameUser,
-      professionUser: professionUser ?? this.professionUser,
-      collaborators: collaborators ?? this.collaborators,
-      tags: tags ?? this.tags,
-      createdAt: createdAt ?? this.createdAt,
     );
   }
 }

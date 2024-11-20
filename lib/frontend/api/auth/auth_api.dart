@@ -1,3 +1,4 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'package:eureka_final_version/frontend/models/login_response.dart';
@@ -7,9 +8,14 @@ import 'package:eureka_final_version/frontend/models/user.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
-const urlSpring = 'http://localhost:8080/api/auth';
+// // const urlSpring = 'http://localhost:8080/api/auth';
+// const urlSpring = 'http://192.168.1.235:8080/api/auth';
+// // const middleware = 'http://localhost:8070';
+// const middleware = 'http://192.168.1.235:8070';
 
 class AuthHelper {
+  static final String urlSpring = dotenv.env['SPRING_API_URL'] ?? '';
+  static final String middleware = dotenv.env['MIDDLEWARE_API_URL'] ?? '';
   // Check if the token is valid
   Future<bool> checkToken(String token) async {
     try {
@@ -43,7 +49,8 @@ class AuthHelper {
       String purpose,
       String profession,
       List<String> interests) async {
-    const url = 'http://localhost:8070/signup';
+    // const url = 'http://localhost:8070/signup';
+    final url = '$middleware/signup';
 
     // Data to be sent to the backend without the uid
     final Map<String, dynamic> signupData = {
@@ -88,7 +95,9 @@ class AuthHelper {
 
   Future<LoginResponse> userLogin(String emailControllerText,
       String passwordControllerText, bool errorMessage) async {
-    const url = 'http://localhost:8070/login';
+    // const url = 'http://localhost:8070/login';
+
+    final url = '$middleware/login';
 
     // 192.168.1.235
 
@@ -143,7 +152,7 @@ class AuthHelper {
     try {
       final response = await http.post(
         Uri.parse(
-            'http://localhost:8070/signout'), // Replace with your actual logout service URL
+            '$middleware/signout'), // Replace with your actual logout service URL
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',

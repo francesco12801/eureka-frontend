@@ -14,3 +14,5 @@ property protection, eliminating the hassle and ensuring that their innovations 
 safeguarded from the moment they are shared. This combination of community-driven
 feedback and built-in protection makes Eureka an essential tool for anyone looking to
 refine and secure their creative endeavors.
+
+

@@ -73,17 +73,37 @@ class GenieCard extends StatelessWidget {
   Widget _buildHeader() {
     return Row(
       children: [
-        Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-                color: const Color.fromARGB(255, 255, 255, 255), width: 2),
-          ),
-          child: CircleAvatar(
-            backgroundImage:
-                NetworkImage(userHelper.getProfileImage().toString()),
-            radius: 25,
-          ),
+        // Use FutureBuilder to handle the asynchronous call for profile image
+        FutureBuilder<String?>(
+          future:
+              userHelper.getProfileImage(), // The Future you want to resolve
+          builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              // Show a loading indicator while waiting for the future to resolve
+              return const CircleAvatar(
+                backgroundColor: Colors.grey, // Placeholder color
+                radius: 25,
+              );
+            } else if (snapshot.hasError) {
+              // Handle error if any
+              return const CircleAvatar(
+                backgroundColor: Colors.grey, // Placeholder color
+                radius: 25,
+              );
+            } else if (snapshot.hasData && snapshot.data != null) {
+              // Display the profile image once the future resolves
+              return CircleAvatar(
+                backgroundImage: NetworkImage(snapshot.data!),
+                radius: 25,
+              );
+            } else {
+              // Fallback in case there's no data
+              return const CircleAvatar(
+                backgroundColor: Colors.grey, // Placeholder color
+                radius: 25,
+              );
+            }
+          },
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -91,7 +111,7 @@ class GenieCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                genie.nameSurnameUser,
+                genie.nameSurnameCreator,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -100,7 +120,7 @@ class GenieCard extends StatelessWidget {
                 ),
               ),
               Text(
-                genie.professionUser,
+                genie.professionUser!,
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 14,
@@ -114,7 +134,7 @@ class GenieCard extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(right: 10.0),
           child: Text(
-            genieHelper.formatDate(genie.createdAt!),
+            genieHelper.formatDate(genie.createdAt.toString()),
             style: const TextStyle(
               color: Colors.white70,
               fontFamily: 'Roboto',

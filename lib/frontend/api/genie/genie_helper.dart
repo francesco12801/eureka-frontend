@@ -2,18 +2,18 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:eureka_final_version/frontend/models/genie_response.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-
 import 'package:eureka_final_version/frontend/models/genie.dart';
 
 class GenieHelper {
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
-  static const genieAPI = 'http://localhost:8080/api/genie';
+  static final String genieAPI = dotenv.env['GENIE_API_URL'] ?? '';
 
   Future<GenieResponse> createGenie(Genie genieData) async {
-    const url = '$genieAPI/create';
+    final url = '$genieAPI/create';
 
     final token = await _secureStorage.read(key: 'auth_token');
     try {
@@ -46,61 +46,34 @@ class GenieHelper {
   }
 
   String formatDate(String dateString) {
-    DateTime date = DateTime.parse(dateString);
+    try {
+      // Parse the dateString to an integer (timestamp in milliseconds)
+      final int timestamp = int.parse(dateString);
 
-    DateTime now = DateTime.now();
+      // Convert timestamp to DateTime
+      final DateTime date = DateTime.fromMillisecondsSinceEpoch(timestamp);
 
-    Duration difference = now.difference(date);
+      // Get the current time
+      final DateTime now = DateTime.now();
 
-    // Convert the duration to hours
-    int hours = difference.inHours;
+      // Calculate the difference
+      final Duration difference = now.difference(date);
 
-    // Return the formatted string
-    return '${hours.abs()}H';
+      // If the difference is more than 24 hours, return days
+      if (difference.inHours >= 24) {
+        final int daysDifference = difference.inDays; // Days difference
+        return '$daysDifference ${daysDifference == 1 ? "day" : "days"} ago';
+      } else {
+        // Otherwise, return hours
+        final int hoursDifference = difference.inHours;
+        return '$hoursDifference ${hoursDifference == 1 ? "hour" : "hours"} ago';
+      }
+    } catch (e) {
+      // Handle parsing errors or invalid dateString
+      return 'Invalid date';
+    }
   }
 
-  // Change this funcion to Spring boot backend
-
-//   Future<List<Map<String, dynamic>>> getUserGenies() async {
-//     const url = '$genieAPI/get-from-user';
-//     try {
-//       // Send the GET request to the backend and attach the token to the header
-//       final response = await http.get(
-//         Uri.parse(url),
-//         headers: {'Authorization': 'Bearer $token'},
-//       );
-
-//       // attach the token to the header
-//       final Map<String, dynamic> responseData = jsonDecode(response.body);
-//       final geniedData = responseData['genies'];
-
-//       debugPrint('My genie data: $geniedData');
-
-//       // Check if the request was successful
-//       if (response.statusCode == 200) {
-//         // Parse the response body into a Map
-//         final Map<String, dynamic> responseData = jsonDecode(response.body);
-//         final geniedData = responseData['genies'];
-
-//         debugPrint('My genie data: $geniedData');
-
-//         // Extract the genies list from the response
-//         final List<Map<String, dynamic>> genies =
-//             List<Map<String, dynamic>>.from(responseData['genies']);
-
-//         return genies;
-//       } else {
-//         // If the request failed, throw an exception with the error message
-//         throw Exception(
-//             'Failed to load genies. Status code: ${response.statusCode}');
-//       }
-//     } catch (e) {
-//       // If there was an error, print it and rethrow the exception
-//       debugPrint('Error fetching genies: $e');
-//       throw Exception('Error fetching genies: $e');
-//     }
-//   }
-// }
   Future<List<Map<String, dynamic>>> getUserGenies() async {
     try {
       // Invia una richiesta GET al server con il token nell'header di autorizzazione

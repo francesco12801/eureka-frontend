@@ -45,6 +45,8 @@ dependencies:
   image_cropper: ^8.0.1
   image_cropper_platform_interface: ^7.0.0
   flutter_secure_storage: ^9.2.2
+  intl: ^0.20.0
+  flutter_dotenv: ^5.2.1
 
 dev_dependencies:
   flutter_test:

@@ -46,16 +46,19 @@ class _PostCardCreationState extends State<PostCardCreation> {
     final title = _titleController.text;
     final description = _contentController.text;
     final target = isPublic ? 'public' : 'private';
-    final nameSurnameUser = widget.userData.nameSurname;
+    final nameSurnameCreator = widget.userData.nameSurname;
     final professionUser = widget.userData.profession;
 
+    debugPrint('nameSurnameCreator: $nameSurnameCreator');
+    debugPrint('professionUser: $professionUser');
+
     final Genie dataGenie = Genie(
-        title: title,
-        description: description,
-        target: target,
-        nameSurnameUser: nameSurnameUser,
-        professionUser: professionUser,
-        license: isPublic ? 'CC BY-NC-ND 4.0' : '');
+      title: title,
+      description: description,
+      target: target,
+      nameSurnameCreator: nameSurnameCreator,
+      professionUser: professionUser,
+    );
 
     Navigator.push(
       context,
@@ -124,7 +127,7 @@ class _PostCardCreationState extends State<PostCardCreation> {
           actions: <Widget>[
             CupertinoDialogAction(
               child: const Text(
-                'Annulla',
+                'Cancel',
                 style: TextStyle(color: red),
               ),
               onPressed: () {
@@ -133,7 +136,7 @@ class _PostCardCreationState extends State<PostCardCreation> {
             ),
             CupertinoDialogAction(
               child: const Text(
-                'Condividi',
+                'Share',
                 style: TextStyle(color: greenIOS),
               ),
               onPressed: () async {
