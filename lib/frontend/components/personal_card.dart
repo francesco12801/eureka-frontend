@@ -123,6 +123,25 @@ class _GenieCardState extends State<GenieCard> {
     }
   }
 
+  String _formatLikes(int likes) {
+    if (likes >= 1000000000) {
+      return (likes / 1000000000)
+              .toStringAsFixed(1)
+              .replaceAll(RegExp(r'\.0$'), '') +
+          'B'; // Miliardi
+    } else if (likes >= 1000000) {
+      return (likes / 1000000)
+              .toStringAsFixed(1)
+              .replaceAll(RegExp(r'\.0$'), '') +
+          'M';
+    } else if (likes >= 1000) {
+      return (likes / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '') +
+          'K';
+    } else {
+      return likes.toString();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -194,7 +213,7 @@ class _GenieCardState extends State<GenieCard> {
               ),
               const SizedBox(width: 4),
               Text(
-                '$_likesCount', // Visualizza il numero di likes localmente
+                _formatLikes(_likesCount), // Usa la funzione di formattazione
                 style: const TextStyle(
                   color: Colors.white,
                   fontFamily: 'Roboto',
