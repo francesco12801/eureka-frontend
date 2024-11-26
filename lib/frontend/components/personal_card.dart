@@ -1,22 +1,127 @@
+import 'dart:io';
+import 'package:eureka_final_version/frontend/api/toggle/toggle_helper.dart';
+import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/models/genie.dart';
 import 'package:eureka_final_version/frontend/models/user.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:http/http.dart' as http;
 
-class GenieCard extends StatelessWidget {
+class GenieCard extends StatefulWidget {
   final Genie genie;
   final EurekaUser user;
   final GenieHelper genieHelper;
   final UserHelper userHelper = UserHelper();
+  final ToggleHelper toggleHelper = ToggleHelper();
 
-  GenieCard(
-      {required this.genie,
-      required this.user,
-      required this.genieHelper,
-      super.key});
+  GenieCard({
+    required this.genie,
+    required this.user,
+    required this.genieHelper,
+    super.key,
+  });
+
+  @override
+  _GenieCardState createState() => _GenieCardState();
+}
+
+class _GenieCardState extends State<GenieCard> {
+  late Future<String?> _profileImageFuture;
+  late Future<List<String>> _genieImagesFuture;
+  late Future<List<String>> _genieFilesFuture;
+  late Future<bool> isLiked;
+  late Future<bool> isSaved;
+
+  int _likesCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _profileImageFuture = widget.userHelper.getProfileImage();
+    _genieImagesFuture = widget.genieHelper.getImageFromGenie(widget.genie);
+    _genieFilesFuture = widget.genieHelper.getFilesFromGenie(widget.genie);
+    _initializeLikesCount();
+    isLiked = widget.toggleHelper.isLiked(widget.genie);
+    isSaved = widget.toggleHelper.isSaved(widget.genie);
+  }
+
+  Future<void> _initializeLikesCount() async {
+    _likesCount = await widget.genieHelper.getLikesCount(widget.genie);
+    setState(() {});
+  }
+
+  Future<void> _toggleSave() async {
+    // Save the current state
+    final currentIsSaved = await isSaved;
+    final newIsSaved = !currentIsSaved;
+
+    // Update the local state to reflect the change immediately
+    setState(() {
+      isSaved = Future.value(newIsSaved);
+    });
+
+    try {
+      // Send the change to the backend
+      final response = await widget.toggleHelper.toogleSave(
+        widget.genie.id!,
+        newIsSaved ? 'save' : 'unsave',
+      );
+
+      if (!response) {
+        // If the request fails, revert the state
+        setState(() {
+          isSaved = Future.value(currentIsSaved);
+        });
+        throw Exception("Error saving/un-saving the item.");
+      }
+    } catch (e) {
+      debugPrint("Error: $e");
+
+      // Revert the state in case of an exception
+      setState(() {
+        isSaved = Future.value(currentIsSaved);
+      });
+    }
+  }
+
+  Future<void> _toggleLike() async {
+    final currentIsLiked = await isLiked;
+    final newIsLiked = !currentIsLiked;
+
+    final currentLikesCount = _likesCount;
+
+    setState(() {
+      isLiked = Future.value(newIsLiked);
+      _likesCount = currentLikesCount +
+          (newIsLiked ? 1 : -1); // Aggiorna il contatore localmente
+    });
+
+    try {
+      final response = await widget.toggleHelper.toogleLike(
+        widget.genie.id!,
+        newIsLiked ? '+1' : '-1',
+      );
+
+      if (!response) {
+        setState(() {
+          isLiked = Future.value(currentIsLiked);
+          _likesCount = currentLikesCount;
+        });
+        throw Exception("Errore nell'aggiornamento del contatore");
+      }
+    } catch (e) {
+      debugPrint("backend error: $e");
+
+      setState(() {
+        isLiked = Future.value(currentIsLiked);
+        _likesCount = currentLikesCount;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +144,7 @@ class GenieCard extends StatelessWidget {
                   _buildHeader(),
                   const SizedBox(height: 16),
                   Text(
-                    genie.title,
+                    widget.genie.title,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -49,7 +154,7 @@ class GenieCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    genie.description,
+                    widget.genie.description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -57,10 +162,9 @@ class GenieCard extends StatelessWidget {
                       fontFamily: 'Roboto',
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  _buildImagePlaceholder(),
-                  const SizedBox(height: 16),
-                  _buildActionBar(),
+                  _getImages(),
+                  _getFiles(),
+                  _buildActionBar(context),
                 ],
               ),
             ),
@@ -70,36 +174,115 @@ class GenieCard extends StatelessWidget {
     );
   }
 
+  Widget _buildActionBar(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        GestureDetector(
+          onTap: _toggleLike,
+          child: Row(
+            children: [
+              FutureBuilder<bool>(
+                future: isLiked,
+                builder: (context, snapshot) {
+                  final bool liked = snapshot.data ?? false;
+                  return Icon(
+                    CupertinoIcons.heart,
+                    color: liked ? Colors.red : Colors.white,
+                  );
+                },
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$_likesCount', // Visualizza il numero di likes localmente
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Roboto',
+                ),
+              ),
+            ],
+          ),
+        ),
+        _buildIconWithCount(CupertinoIcons.chat_bubble, widget.genie.comments),
+        FutureBuilder<bool>(
+          future: isSaved,
+          builder: (context, snapshot) {
+            final bool saved = snapshot.data ?? false;
+            return GestureDetector(
+              onTap: _toggleSave,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: saved ? Colors.yellow : Colors.transparent,
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  CupertinoIcons.bookmark,
+                  color: saved ? Colors.yellow : Colors.white,
+                ),
+              ),
+            );
+          },
+        ),
+        // Menu Popup
+        PopupMenuButton<String>(
+          onSelected: (String value) {
+            if (value == 'edit') {
+              _modifyGenie(context);
+            } else if (value == 'delete') {
+              _deleteGenie(context);
+            }
+          },
+          itemBuilder: (BuildContext context) => [
+            PopupMenuItem<String>(
+              value: 'edit',
+              child: _buildCustomMenuItem(
+                icon: CupertinoIcons.pencil,
+                text: 'Edit',
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'delete',
+              child: _buildCustomMenuItem(
+                icon: CupertinoIcons.trash,
+                text: 'Delete',
+              ),
+            ),
+          ],
+          icon:
+              const Icon(CupertinoIcons.ellipsis_vertical, color: Colors.white),
+          offset: Offset(0, 40),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          color: Colors.black87,
+        ),
+      ],
+    );
+  }
+
   Widget _buildHeader() {
     return Row(
       children: [
-        // Use FutureBuilder to handle the asynchronous call for profile image
         FutureBuilder<String?>(
-          future:
-              userHelper.getProfileImage(), // The Future you want to resolve
+          future: _profileImageFuture,
           builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              // Show a loading indicator while waiting for the future to resolve
               return const CircleAvatar(
-                backgroundColor: Colors.grey, // Placeholder color
+                backgroundColor: Colors.grey,
                 radius: 25,
               );
-            } else if (snapshot.hasError) {
-              // Handle error if any
+            } else if (snapshot.hasError || !snapshot.hasData) {
               return const CircleAvatar(
-                backgroundColor: Colors.grey, // Placeholder color
-                radius: 25,
-              );
-            } else if (snapshot.hasData && snapshot.data != null) {
-              // Display the profile image once the future resolves
-              return CircleAvatar(
-                backgroundImage: NetworkImage(snapshot.data!),
+                backgroundColor: Colors.grey,
                 radius: 25,
               );
             } else {
-              // Fallback in case there's no data
-              return const CircleAvatar(
-                backgroundColor: Colors.grey, // Placeholder color
+              return CircleAvatar(
+                backgroundImage: NetworkImage(snapshot.data!),
                 radius: 25,
               );
             }
@@ -111,7 +294,7 @@ class GenieCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                genie.nameSurnameCreator,
+                widget.genie.nameSurnameCreator,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -120,7 +303,7 @@ class GenieCard extends StatelessWidget {
                 ),
               ),
               Text(
-                genie.professionUser!,
+                widget.genie.professionUser!,
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 14,
@@ -134,7 +317,7 @@ class GenieCard extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(right: 10.0),
           child: Text(
-            genieHelper.formatDate(genie.createdAt.toString()),
+            widget.genieHelper.formatDate(widget.genie.createdAt.toString()),
             style: const TextStyle(
               color: Colors.white70,
               fontFamily: 'Roboto',
@@ -145,29 +328,300 @@ class GenieCard extends StatelessWidget {
     );
   }
 
-  Widget _buildImagePlaceholder() {
+  Widget _buildCustomMenuItem({required IconData icon, required String text}) {
     return Container(
-      height: 300,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Colors.blue, Colors.purple],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
+        color: Colors.transparent, // Colore scuro per la voce del menu
+        borderRadius: BorderRadius.circular(12), // Bordi arrotondati
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: Colors.white),
+        title: Text(
+          text,
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        borderRadius: BorderRadius.circular(8),
       ),
     );
   }
 
-  Widget _buildActionBar() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildIconWithCount(CupertinoIcons.heart, genie.likes),
-        _buildIconWithCount(CupertinoIcons.chat_bubble, genie.comments),
-        _buildIconWithCount(CupertinoIcons.bookmark, genie.saved),
-        const Icon(CupertinoIcons.arrowshape_turn_up_right, color: iconColor),
-      ],
+  void _modifyGenie(BuildContext context) {
+    // Aggiungi il codice per modificare il genie
+    print('Modifica il genie');
+  }
+
+  void _deleteGenie(BuildContext context) async {
+    // Wait the delete operation to complete
+    try {
+      final response = await widget.genieHelper.deleteGenie(widget.genie);
+      // Refresh the UI
+      if (response) {
+        Navigator.of(context).pop();
+      } else {
+        throw Exception("Failed to delete Genie");
+      }
+    } catch (e) {
+      // Show an error dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Error'),
+            content: const Text(
+              'Error deleting the Genie. Please try again later.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  Widget _getFiles() {
+    return FutureBuilder<List<String>>(
+      future: _genieFilesFuture,
+      builder: (BuildContext context, AsyncSnapshot<List<String>> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              "Error loading PDFs: ${snapshot.error}",
+              style: const TextStyle(color: Colors.white),
+            ),
+          );
+        }
+
+        final List<String> pdfFiles = snapshot.data!;
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: pdfFiles.map((pdfUrl) {
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: GestureDetector(
+                    onTap: () {
+                      // Handle PDF click and show the overlay
+                      _showPdfOverlay(context, pdfUrl);
+                    },
+                    child: Container(
+                      height: 100,
+                      width: 100,
+                      color: Colors.grey[300],
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // PDF icon
+                          Icon(
+                            Icons.picture_as_pdf,
+                            color: Colors.red,
+                            size: 40,
+                          ),
+                          SizedBox(height: 8),
+                          // Display the file name under the PDF icon
+                          Text(
+                            "PDF", // Display only the file name
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10, // Adjust font size for better fit
+                            ),
+                            textAlign: TextAlign.center, // Center the text
+                            maxLines: 2, // Limit to 2 lines to avoid overflow
+                            overflow: TextOverflow
+                                .ellipsis, // Add "..." for long text
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  //Helper function to download the PDF file
+
+  Future<String> downloadPdf(String url) async {
+    final response = await http.get(Uri.parse(url));
+    final directory = await getApplicationDocumentsDirectory();
+    final filePath = '${directory.path}/temp.pdf';
+    final file = File(filePath);
+    await file.writeAsBytes(response.bodyBytes);
+    return filePath;
+  }
+
+  // Show the PDF file in a dialog
+  void _showPdfOverlay(BuildContext context, String pdfUrl) async {
+    final localPath = await downloadPdf(pdfUrl);
+    showDialog(
+      context: context,
+      barrierDismissible: true, // Close on tap outside
+      builder: (BuildContext context) {
+        return GestureDetector(
+          onTap: () =>
+              Navigator.of(context).pop(), // Close dialog on background tap
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Transparent background
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withOpacity(0.2),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {}, // Prevent close when tapping inside the dialog
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  height: MediaQuery.of(context).size.height *
+                      0.6, // Smaller height
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: PDFView(
+                      filePath: localPath,
+                      autoSpacing: true,
+                      pageFling: true,
+                      pageSnap: true,
+                      onError: (e) {
+                        debugPrint('Error: $e');
+                      },
+                      onPageError: (page, e) {
+                        debugPrint('Page $page error: $e');
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _getImages() {
+    return FutureBuilder<List<String>>(
+      future: _genieImagesFuture,
+      builder: (BuildContext context, AsyncSnapshot<List<String>> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              "Error loading images: ${snapshot.error}",
+              style: const TextStyle(color: Colors.white),
+            ),
+          );
+        }
+
+        final List<String> images = snapshot.data!;
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: images.map((imageUrl) {
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: GestureDetector(
+                    onTap: () {
+                      _showImageDialog(context, imageUrl);
+                    },
+                    child: Image.network(
+                      imageUrl,
+                      height: 100,
+                      width: 100,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) {
+                          return child;
+                        }
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey[300],
+                        height: 100,
+                        width: 100,
+                        child: const Icon(
+                          Icons.broken_image,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showImageDialog(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(30),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black.withOpacity(0.6),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(30),
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) {
+                          return child;
+                        }
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey[300],
+                        child: const Icon(
+                          Icons.broken_image,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

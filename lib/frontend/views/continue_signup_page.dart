@@ -203,8 +203,6 @@ class _ContinueSignUpState extends State<ContinueSignUp> {
                                               interestColors.remove(interest);
                                             }
                                           });
-                                          debugPrint(
-                                              'Selected interests: $selectedInterests');
                                         },
                                         child: Container(
                                           margin: const EdgeInsets.symmetric(
@@ -256,7 +254,6 @@ class _ContinueSignUpState extends State<ContinueSignUp> {
                                 isBack: true,
                                 onPressed: () {
                                   goBack(context);
-                                  debugPrint("Back button pressed");
                                 },
                               ),
                               const Spacer(),

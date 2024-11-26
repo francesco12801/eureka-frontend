@@ -14,9 +14,17 @@ import 'package:eureka_final_version/frontend/views/preview_loading.dart';
 import 'package:eureka_final_version/frontend/views/signup_page.dart';
 import 'package:eureka_final_version/frontend/views/transition_before_landing.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
-  // HttpOverrides.global = MyHttpOverrides();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    debugPrint("Error loading .env file: $e");
+  }
+
   runApp(const MyApp());
 }
 
@@ -84,12 +92,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-// class MyHttpOverrides extends HttpOverrides {
-//   @override
-//   HttpClient createHttpClient(SecurityContext? context) {
-//     return super.createHttpClient(context)
-//       ..badCertificateCallback =
-//           (X509Certificate cert, String host, int port) => true;
-//   }
-// }

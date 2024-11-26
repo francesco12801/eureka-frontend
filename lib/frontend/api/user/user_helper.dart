@@ -27,8 +27,6 @@ class UserHelper {
 
       if (response.statusCode == 200) {
         final String? profileImage = imageResponse['profileImage'];
-        debugPrint(
-            'profile image MANNAGGGGGGAGGAAYHDBHBHUDSAHBDSA: $profileImage');
         return profileImage;
       } else {
         return 'Error fetching profile image';
@@ -51,7 +49,6 @@ class UserHelper {
       if (response.statusCode == 200) {
         final String? bannerImage = imageResponse['bannerImage'];
 
-        debugPrint("printing respone: $bannerImage");
         return bannerImage;
       } else {
         return 'Error fetching banner image';
@@ -70,7 +67,7 @@ class UserHelper {
       final Map<String, dynamic> emailResponse = json.decode(response.body);
       final int statusCode = emailResponse['statusCode'];
       final String email = emailResponse['email'];
-      debugPrint('email: $email');
+
       if (statusCode == 200) {
         return email;
       } else {
@@ -90,7 +87,7 @@ class UserHelper {
       final Map<String, dynamic> addressResponse = json.decode(response.body);
       final int statusCode = addressResponse['statusCode'];
       final String address = addressResponse['address'];
-      debugPrint('address: $address');
+
       if (statusCode == 200) {
         return address;
       } else {
@@ -107,7 +104,7 @@ class UserHelper {
   Future<Map<String, String>> changeProfileImage(XFile? imageProfile) async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
-      debugPrint('Token: $token');
+
       final request = http.MultipartRequest(
           'POST', Uri.parse('$editProfile/changeProfileImage'));
       request.headers['Authorization'] = 'Bearer $token';
@@ -126,16 +123,13 @@ class UserHelper {
       final String profileImageReturn = imageResponse['profileImage'];
 
       if (response.statusCode == 200) {
-        debugPrint('Profile image changed successfully');
         return {
           'profileImage': profileImageReturn,
         };
       } else {
-        debugPrint('Error changing profile image: ${response.statusCode}');
         return {};
       }
     } catch (e) {
-      debugPrint('Error changing profile image: $e');
       return {};
     }
   }
@@ -145,14 +139,13 @@ class UserHelper {
   Future<Map<String, String>> changeBannerImage(XFile? imageBanner) async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
-      debugPrint('Token: $token');
+
       final request = http.MultipartRequest(
           'POST', Uri.parse('$editProfile/changeBannerImage'));
       request.headers.addAll({
         'Authorization': 'Bearer $token',
         'Content-Type': 'multipart/form-data',
       });
-      debugPrint('Authorization Header: ${request.headers['Authorization']}');
 
       if (imageBanner != null) {
         final bannerImage =
@@ -162,21 +155,17 @@ class UserHelper {
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
       final Map<String, dynamic> imageResponse = json.decode(responseBody);
-      debugPrint('Response Body: $responseBody');
 
       final String bannerImageReturn = imageResponse['bannerImage'];
 
       if (response.statusCode == 200) {
-        debugPrint('Banner image changed successfully');
         return {
           'bannerImage': bannerImageReturn,
         };
       } else {
-        debugPrint('Error changing banner image: ${response.statusCode}');
         return {};
       }
     } catch (e) {
-      debugPrint('Error changing banner image: $e');
       return {};
     }
   }
@@ -190,7 +179,7 @@ class UserHelper {
       // Create a multipart request
       var request =
           http.MultipartRequest('POST', Uri.parse('$editProfile/uploadImages'));
-      debugPrint('Token: $token');
+
       request.headers['Authorization'] = 'Bearer $token';
       request.headers['Content-Type'] = 'multipart/form-data';
 
@@ -203,8 +192,6 @@ class UserHelper {
       var bannerImageRequest =
           await http.MultipartFile.fromPath('bannerImage', bannerImage!.path);
       request.files.add(bannerImageRequest);
-
-      debugPrint("Okay just before sending the request");
 
       // Send the request
       var response = await request.send();
@@ -219,23 +206,17 @@ class UserHelper {
       final String profileImageReturn = imageResponse['profileImage'];
       final String bannerImageReturn = imageResponse['bannerImage'];
 
-      debugPrint("Profile Image URL: $profileImageReturn");
-      debugPrint("Banner Image URL: $bannerImageReturn");
-
       // Check the response status code
       if (response.statusCode == 200) {
-        debugPrint('Images uploaded successfully');
         // Return a map containing the URLs
         return {
           'profileImage': profileImageReturn,
           'bannerImage': bannerImageReturn,
         };
       } else {
-        debugPrint('Error uploading images: ${response.statusCode}');
         return {};
       }
     } catch (e) {
-      debugPrint('Error uploading images: $e');
       return {};
     }
   }

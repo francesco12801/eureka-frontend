@@ -19,10 +19,7 @@ class _NetworkPageState extends State<NetworkPage> {
   final _secureStorage = const FlutterSecureStorage();
 
   void onTap(int index) async {
-    debugPrint("trying to read token");
     String? token = await _secureStorage.read(key: 'auth_token');
-
-    debugPrint("token: $token");
 
     if (token == null) {
       // Handle token not found

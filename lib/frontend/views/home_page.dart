@@ -24,10 +24,7 @@ class _HomePageState extends State<HomePage> {
 
   // On tap method for the navigation bar
   void onTap(int index) async {
-    debugPrint("trying to read token");
     String? token = await _secureStorage.read(key: 'auth_token');
-
-    debugPrint("token: $token");
 
     if (token == null) {
       // Handle token not found

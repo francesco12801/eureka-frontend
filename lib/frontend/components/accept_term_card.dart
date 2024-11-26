@@ -28,6 +28,9 @@ class _AcceptTermsCardState extends State<AcceptTermsCard> {
   bool _isPrivacyAccepted = false;
   bool _isNewsletterSubscribed = false;
 
+  // Loading state
+  bool _isLoading = false; // Add this variable
+
   @override
   void initState() {
     super.initState();
@@ -35,21 +38,56 @@ class _AcceptTermsCardState extends State<AcceptTermsCard> {
     _localGenieData = widget.genieData;
   }
 
-  // Genie Creation
-
+  // Genie Creation with loading indicator
   Future<void> _genieCreation() async {
-    final genieResponse = await genieHelper.createGenie(_localGenieData);
-    if (genieResponse.success == true) {
-      Navigator.pushNamed(
-        context,
-        homePageRoute,
-        arguments: widget.userData,
-        // I have to pass the genie data to the home page
-      );
+    setState(() {
+      _isLoading = true; // Set loading to true when the backend call starts
+    });
+
+    try {
+      final genieResponse = await genieHelper.createGenie(_localGenieData);
+      if (genieResponse.success == true) {
+        Navigator.pushNamed(
+          context,
+          homePageRoute,
+          arguments: widget.userData,
+        );
+        setState(() {
+          _localGenieData = genieResponse.genie!;
+        });
+      } else {
+        // Handle error if genie creation fails
+        _showErrorDialog();
+      }
+    } catch (error) {
+      // Handle any error that occurs during the backend call
+      _showErrorDialog();
+    } finally {
       setState(() {
-        _localGenieData = genieResponse.genie!;
+        _isLoading = false; // Set loading to false when the call is done
       });
     }
+  }
+
+  void _showErrorDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text('An error occurred while creating the genie.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -187,15 +225,18 @@ class _AcceptTermsCardState extends State<AcceptTermsCard> {
           ),
           const SizedBox(height: 30),
 
+          // Conditionally display either the button or the loading indicator
           Center(
-            child: MyElevatedButton(
-              text: "Eureka!",
-              isBold: true,
-              isBack: true,
-              onPressed: () {
-                _handleButtonPress(context);
-              },
-            ),
+            child: _isLoading
+                ? CircularProgressIndicator() // Show loading indicator when loading
+                : MyElevatedButton(
+                    text: "Eureka!",
+                    isBold: true,
+                    isBack: true,
+                    onPressed: () {
+                      _handleButtonPress(context);
+                    },
+                  ),
           ),
           const SizedBox(height: 10),
         ],
@@ -206,7 +247,6 @@ class _AcceptTermsCardState extends State<AcceptTermsCard> {
   void _handleButtonPress(BuildContext context) {
     if (_isTermsAccepted && _isPrivacyAccepted && _isNewsletterSubscribed) {
       // All conditions met, proceed with the home page loading version
-      debugPrint("Eureka! All conditions accepted.");
       _genieCreation();
     } else {
       // Show a pop-up if terms or conditions are not accepted

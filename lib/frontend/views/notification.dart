@@ -21,10 +21,7 @@ class _NotificationPageState extends State<NotificationPage> {
   final _secureStorage = const FlutterSecureStorage();
 
   void onTap(int index) async {
-    debugPrint("trying to read token");
     String? token = await _secureStorage.read(key: 'auth_token');
-
-    debugPrint("token: $token");
 
     if (token == null) {
       showDialog(

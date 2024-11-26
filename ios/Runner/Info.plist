@@ -49,12 +49,20 @@
 <string>We need access to your location to show your current position in posts.</string>
 <key>NSLocationAlwaysUsageDescription</key>
 <string>We need access to your location even when the app is in the background.</string>
-
-<key>NSPhotoLibraryUsageDescription</key>
-	
+<key>NSDocumentsFolderUsageDescription</key>
+<string>App needs access to files in the documents folder.</string>
+<key>NSDownloadsFolderUsageDescription</key>
+<string>App needs access to the downloads folder.</string>
+<key>UIFileSharingEnabled</key>
+<true/>
+<key>LSSupportsOpeningDocumentsInPlace</key>
+<true/>
+<key>NSPhotoLibraryUsageDescription</key>	
 <string>This app requires access to your photo library to allow you to select a profile picture.</string>
 <key>NSCameraUsageDescription</key>
 <string>This app requires access to the camera to allow you to take a profile picture.</string>
+<key>NSDocumentsUsageDescription</key>
+<string>App needs access to documents for processing PDF files.</string>
 
 </dict>
 </plist>

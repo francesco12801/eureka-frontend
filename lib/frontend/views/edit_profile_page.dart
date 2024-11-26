@@ -80,12 +80,9 @@ class _EditProfileState extends State<EditProfile> {
 
   Future<EurekaUser?> _uploadImageCall() async {
     try {
-      debugPrint('Uploading profile image: ${_profileImage?.path}');
-      debugPrint('Uploading banner image: ${_bannerImage?.path}');
       if (_profileImage == null && _bannerImage == null) {
         return null;
       } else if (_profileImage == null && _bannerImage != null) {
-        debugPrint('Uploading banner image');
         final Map<String, String> updatedUser =
             await userHelper.changeBannerImage(_bannerImage);
         final bannerImageUrl = updatedUser['bannerImage'];
@@ -94,7 +91,6 @@ class _EditProfileState extends State<EditProfile> {
 
         return uploadedUser;
       } else if (_profileImage != null && _bannerImage == null) {
-        debugPrint('Uploading profile image');
         final Map<String, String> updatedUser =
             await userHelper.changeProfileImage(_profileImage);
         final profileImageUrl = updatedUser['profileImage'];
@@ -102,7 +98,6 @@ class _EditProfileState extends State<EditProfile> {
             widget.userData.copyWith(profileImage: profileImageUrl);
         return uploadedUser;
       } else {
-        debugPrint('Uploading both images');
         final Map<String, String> updatedUser =
             await userHelper.uploadImages(_profileImage, _bannerImage);
         // Get images from the response
@@ -116,7 +111,6 @@ class _EditProfileState extends State<EditProfile> {
         return uploadedUser;
       }
     } catch (e) {
-      debugPrint('Error uploading images: $e');
       return null;
     }
   }

@@ -29,7 +29,6 @@ class _SettingPageState extends State<SettingPage> {
     setState(() {
       widget.userData.clearUser();
     });
-    debugPrint('Local resources cleared');
   }
 
   Future<void> _handleLogout() async {
@@ -48,7 +47,6 @@ class _SettingPageState extends State<SettingPage> {
         _isLoggingOut = false;
       });
       // Handle error (e.g., show error message to the user)
-      debugPrint('Failed to logout');
     }
   }
 

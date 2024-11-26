@@ -46,7 +46,7 @@ class _ProfilePageState extends State<ProfilePage> {
     isBannerNull = true;
     isProfileNull = true;
     geniesFuture = _fetchGenies();
-    _loadImages();
+    _loadImages(); // Load images on init
   }
 
   Future<void> _loadImages() async {
@@ -60,6 +60,11 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     setState(() {}); // Refresh UI with loaded images
+  }
+
+  // Refresh images manually when clicking the profile
+  Future<void> refreshImages() async {
+    await _loadImages();
   }
 
   Future<List<Map<String, dynamic>>> _fetchGenies() async {
@@ -209,7 +214,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         : const AssetImage(
                                 'assets/images/profile_picture_placeholder.jpg')
                             as ImageProvider,
-                    fit: BoxFit.cover,
+                    fit: BoxFit.contain,
                   ),
                 ),
               ),

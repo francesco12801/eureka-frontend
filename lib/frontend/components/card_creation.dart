@@ -5,9 +5,11 @@ import 'package:eureka_final_version/frontend/components/my_text_button.dart';
 import 'package:eureka_final_version/frontend/models/genie.dart';
 import 'package:eureka_final_version/frontend/models/user.dart';
 import 'package:eureka_final_version/frontend/views/accept_terms.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
+import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
@@ -22,14 +24,18 @@ class PostCardCreation extends StatefulWidget {
   State<PostCardCreation> createState() => _PostCardCreationState();
 }
 
-class _PostCardCreationState extends State<PostCardCreation> {
+class _PostCardCreationState extends State<PostCardCreation>
+    with TickerProviderStateMixin {
   // Variables to manage position etc...
   bool isPublic = true;
   bool isLocationEnabled = false;
-  File? _image;
+  List<File>? _images = [];
   Position? _currentPosition;
   String? _city;
+  List<File>? _files = [];
   final picker = ImagePicker();
+  final List<String>? imageStringList = [];
+  final List<String>? fileStringList = [];
 
   // Helper
   final authHelper = AuthHelper();
@@ -42,6 +48,22 @@ class _PostCardCreationState extends State<PostCardCreation> {
   final TextEditingController _contentController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
 
+  // Animation controller for removing image
+  late AnimationController _animationController;
+  late Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _opacityAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+  }
+
   Future<void> createLocalGenie() async {
     final title = _titleController.text;
     final description = _contentController.text;
@@ -49,13 +71,20 @@ class _PostCardCreationState extends State<PostCardCreation> {
     final nameSurnameCreator = widget.userData.nameSurname;
     final professionUser = widget.userData.profession;
 
-    debugPrint('nameSurnameCreator: $nameSurnameCreator');
-    debugPrint('professionUser: $professionUser');
+    for (final image in _images!) {
+      imageStringList!.add(image.path);
+    }
+
+    for (final file in _files!) {
+      fileStringList!.add(file.path);
+    }
 
     final Genie dataGenie = Genie(
       title: title,
       description: description,
       target: target,
+      images: imageStringList,
+      files: fileStringList,
       nameSurnameCreator: nameSurnameCreator,
       professionUser: professionUser,
     );
@@ -66,6 +95,21 @@ class _PostCardCreationState extends State<PostCardCreation> {
           builder: (context) =>
               AcceptTermsPage(geniedata: dataGenie, userData: widget.userData)),
     );
+  }
+
+  void pickFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc'],
+      );
+
+      if (result != null) {
+        setState(() {
+          _files!.add(File(result.files.single.path!));
+        });
+      } else {}
+    } catch (e) {}
   }
 
   // Get Actual position
@@ -245,6 +289,64 @@ class _PostCardCreationState extends State<PostCardCreation> {
     );
   }
 
+  Future<void> _showAttachmentOptions(BuildContext context) async {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        actions: [
+          CupertinoActionSheetAction(
+            child: const Text('Pick from gallery',
+                style: TextStyle(color: Colors.black)),
+            onPressed: () async {
+              Navigator.of(context).pop();
+              final picker = ImagePicker();
+              final pickedFiles =
+                  await picker.pickMultiImage(); // Seleziona più immagini
+              if (pickedFiles != null) {
+                setState(() {
+                  _images = pickedFiles
+                      .map((pickedFile) => File(pickedFile.path))
+                      .toList();
+                });
+              }
+            },
+          ),
+          CupertinoActionSheetAction(
+            child: const Text('Pick from files',
+                style: TextStyle(color: Colors.black)),
+            onPressed: () async {
+              Navigator.of(context).pop();
+              pickFile(); // Supponendo che tu abbia un metodo per scegliere file
+            },
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          child: const Text('Cancel', style: TextStyle(color: Colors.black)),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ),
+    );
+  }
+
+  void _removeImage(int index) async {
+    setState(() {
+      _opacityAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+        CurvedAnimation(
+            parent: _animationController, curve: Curves.easeOutQuart),
+      );
+    });
+
+    await _animationController.forward();
+
+    setState(() {
+      _images!.removeAt(index);
+    });
+
+    _animationController.reverse();
+  }
+
   Widget _buildContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,23 +363,18 @@ class _PostCardCreationState extends State<PostCardCreation> {
             border: InputBorder.none,
           ),
           style: const TextStyle(
-            color: white,
+            color: Colors.white,
             fontWeight: FontWeight.bold,
             fontFamily: 'Roboto',
             fontSize: 24,
           ),
-          onChanged: (text) {
-            // setState(() {
-            //   post.title = text;
-            // });
-          },
         ),
         TextField(
           controller: _contentController,
           focusNode: _focusNode,
           minLines: 1,
           maxLines: null,
-          style: const TextStyle(color: white, fontSize: 16),
+          style: const TextStyle(color: Colors.white, fontSize: 16),
           decoration: const InputDecoration(
             hintText: 'Write your description...',
             hintStyle: TextStyle(
@@ -285,16 +382,118 @@ class _PostCardCreationState extends State<PostCardCreation> {
                 fontFamily: 'Roboto'),
             border: InputBorder.none,
           ),
-          onChanged: (text) {
-            // setState(() {
-            //   post.content = text;
-            // });
-          },
         ),
-        if (_image != null)
+        if (_images!.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 16),
-            child: Image.file(_image!),
+            child: GridView.builder(
+              shrinkWrap: true,
+              itemCount: _images!.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 8.0,
+                mainAxisSpacing: 8.0,
+              ),
+              itemBuilder: (context, index) {
+                return Stack(
+                  children: [
+                    AnimatedBuilder(
+                      animation: _opacityAnimation,
+                      builder: (context, child) {
+                        return Opacity(
+                          opacity: _opacityAnimation.value,
+                          child: child,
+                        );
+                      },
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          _images![index],
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: () => _removeImage(index),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withOpacity(0.5),
+                          ),
+                          padding: const EdgeInsets.all(6),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        if (_files!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: _files!.map((file) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 8),
+                      if (file.path.endsWith('.pdf'))
+                        SizedBox(
+                          height: 200,
+                          child: PDFView(
+                            filePath: file.path,
+                            autoSpacing: false,
+                            fitPolicy: FitPolicy.BOTH,
+                            backgroundColor: cardColor,
+                          ),
+                        ),
+                      if (file.path.endsWith('.txt'))
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: FutureBuilder<String>(
+                            future: file.readAsString(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.done) {
+                                return Text(
+                                  snapshot.data ?? '',
+                                  style: const TextStyle(color: Colors.white),
+                                );
+                              }
+                              return const CircularProgressIndicator();
+                            },
+                          ),
+                        ),
+                      if (file.path.endsWith('.jpg') ||
+                          file.path.endsWith('.jpeg') ||
+                          file.path.endsWith('.png'))
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Image.file(
+                            file,
+                            height: 150,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
           ),
       ],
     );
@@ -379,52 +578,6 @@ class _PostCardCreationState extends State<PostCardCreation> {
           inactiveTrackColor: lightGreyIOS,
         ),
       ],
-    );
-  }
-
-  Future<void> _showAttachmentOptions(BuildContext context) async {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (context) => CupertinoActionSheet(
-        actions: [
-          CupertinoActionSheetAction(
-            child:
-                const Text('Pick from gallery', style: TextStyle(color: black)),
-            onPressed: () async {
-              Navigator.of(context).pop();
-              final pickedFile =
-                  await picker.pickImage(source: ImageSource.gallery);
-              if (pickedFile != null) {
-                setState(() {
-                  _image = File(pickedFile.path);
-                });
-              }
-            },
-          ),
-          CupertinoActionSheetAction(
-            child:
-                const Text('Pick from files', style: TextStyle(color: black)),
-            onPressed: () async {
-              Navigator.of(context).pop();
-              // final result = await FilePicker.platform.pickFiles(
-              //   type: FileType.custom,
-              //   allowedExtensions: ['jpg', 'pdf', 'doc'],
-              // );
-              // if (result != null && result.files.single.path != null) {
-              //   setState(() {
-              //     _image = File(result.files.single.path!);
-              //   });
-              // }
-            },
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          child: const Text('Cancel', style: TextStyle(color: black)),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-      ),
     );
   }
 
