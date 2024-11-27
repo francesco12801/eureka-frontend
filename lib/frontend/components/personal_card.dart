@@ -1,7 +1,7 @@
-import 'dart:io';
+import 'package:eureka_final_version/frontend/api/file_helper.dart';
 import 'package:eureka_final_version/frontend/api/toggle/toggle_helper.dart';
+import 'package:eureka_final_version/frontend/views/profile_page.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
@@ -9,14 +9,16 @@ import 'package:eureka_final_version/frontend/models/genie.dart';
 import 'package:eureka_final_version/frontend/models/user.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
-import 'package:http/http.dart' as http;
 
 class GenieCard extends StatefulWidget {
   final Genie genie;
   final EurekaUser user;
+
+  // Helper
   final GenieHelper genieHelper;
   final UserHelper userHelper = UserHelper();
   final ToggleHelper toggleHelper = ToggleHelper();
+  final FileHelper fileHelper = FileHelper();
 
   GenieCard({
     required this.genie,
@@ -37,6 +39,7 @@ class _GenieCardState extends State<GenieCard> {
   late Future<bool> isSaved;
 
   int _likesCount = 0;
+  int _savedCount = 0;
 
   @override
   void initState() {
@@ -45,6 +48,7 @@ class _GenieCardState extends State<GenieCard> {
     _genieImagesFuture = widget.genieHelper.getImageFromGenie(widget.genie);
     _genieFilesFuture = widget.genieHelper.getFilesFromGenie(widget.genie);
     _initializeLikesCount();
+    _initializeSavedCount();
     isLiked = widget.toggleHelper.isLiked(widget.genie);
     isSaved = widget.toggleHelper.isSaved(widget.genie);
   }
@@ -54,14 +58,22 @@ class _GenieCardState extends State<GenieCard> {
     setState(() {});
   }
 
+  Future<void> _initializeSavedCount() async {
+    _savedCount = await widget.genieHelper.getSavedCount(widget.genie);
+    setState(() {});
+  }
+
   Future<void> _toggleSave() async {
     // Save the current state
     final currentIsSaved = await isSaved;
     final newIsSaved = !currentIsSaved;
 
+    final currentSavedCount = _savedCount;
+
     // Update the local state to reflect the change immediately
     setState(() {
       isSaved = Future.value(newIsSaved);
+      _savedCount = currentSavedCount + (newIsSaved ? 1 : -1);
     });
 
     try {
@@ -75,6 +87,7 @@ class _GenieCardState extends State<GenieCard> {
         // If the request fails, revert the state
         setState(() {
           isSaved = Future.value(currentIsSaved);
+          _savedCount = currentSavedCount;
         });
         throw Exception("Error saving/un-saving the item.");
       }
@@ -84,6 +97,7 @@ class _GenieCardState extends State<GenieCard> {
       // Revert the state in case of an exception
       setState(() {
         isSaved = Future.value(currentIsSaved);
+        _savedCount = currentSavedCount;
       });
     }
   }
@@ -120,25 +134,6 @@ class _GenieCardState extends State<GenieCard> {
         isLiked = Future.value(currentIsLiked);
         _likesCount = currentLikesCount;
       });
-    }
-  }
-
-  String _formatLikes(int likes) {
-    if (likes >= 1000000000) {
-      return (likes / 1000000000)
-              .toStringAsFixed(1)
-              .replaceAll(RegExp(r'\.0$'), '') +
-          'B'; // Miliardi
-    } else if (likes >= 1000000) {
-      return (likes / 1000000)
-              .toStringAsFixed(1)
-              .replaceAll(RegExp(r'\.0$'), '') +
-          'M';
-    } else if (likes >= 1000) {
-      return (likes / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '') +
-          'K';
-    } else {
-      return likes.toString();
     }
   }
 
@@ -193,10 +188,100 @@ class _GenieCardState extends State<GenieCard> {
     );
   }
 
+  // Widget _buildActionBar(BuildContext context) {
+  //   return Row(
+  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //     children: [
+  //       GestureDetector(
+  //         onTap: _toggleLike,
+  //         child: Row(
+  //           children: [
+  //             FutureBuilder<bool>(
+  //               future: isLiked,
+  //               builder: (context, snapshot) {
+  //                 final bool liked = snapshot.data ?? false;
+  //                 return Icon(
+  //                   CupertinoIcons.heart,
+  //                   color: liked ? Colors.red : Colors.white,
+  //                 );
+  //               },
+  //             ),
+  //             const SizedBox(width: 4),
+  //             Text(
+  //               widget.fileHelper.formatLikes(_likesCount),
+  //               style: const TextStyle(
+  //                 color: Colors.white,
+  //                 fontFamily: 'Roboto',
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //       _buildIconWithCount(CupertinoIcons.chat_bubble, widget.genie.comments),
+  //       FutureBuilder<bool>(
+  //         future: isSaved,
+  //         builder: (context, snapshot) {
+  //           final bool saved = snapshot.data ?? false;
+  //           return GestureDetector(
+  //             onTap: _toggleSave,
+  //             child: Container(
+  //               padding: const EdgeInsets.all(4),
+  //               decoration: BoxDecoration(
+  //                 border: Border.all(
+  //                   color: saved ? Colors.yellow : Colors.transparent,
+  //                   width: 2,
+  //                 ),
+  //                 borderRadius: BorderRadius.circular(8),
+  //               ),
+  //               child: Icon(
+  //                 CupertinoIcons.bookmark,
+  //                 color: saved ? Colors.yellow : Colors.white,
+  //               ),
+  //             ),
+  //           );
+  //         },
+  //       ),
+  //       // Menu Popup
+  //       PopupMenuButton<String>(
+  //         onSelected: (String value) {
+  //           if (value == 'edit') {
+  //             _modifyGenie(context);
+  //           } else if (value == 'delete') {
+  //             _deleteGenie(context);
+  //           }
+  //         },
+  //         itemBuilder: (BuildContext context) => [
+  //           PopupMenuItem<String>(
+  //             value: 'edit',
+  //             child: _buildCustomMenuItem(
+  //               icon: CupertinoIcons.pencil,
+  //               text: 'Edit',
+  //             ),
+  //           ),
+  //           PopupMenuItem<String>(
+  //             value: 'delete',
+  //             child: _buildCustomMenuItem(
+  //               icon: CupertinoIcons.trash,
+  //               text: 'Delete',
+  //             ),
+  //           ),
+  //         ],
+  //         icon:
+  //             const Icon(CupertinoIcons.ellipsis_vertical, color: Colors.white),
+  //         offset: Offset(0, 40),
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(15),
+  //         ),
+  //         color: Colors.black87,
+  //       ),
+  //     ],
+  //   );
+  // }
   Widget _buildActionBar(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
+        // Likes
         GestureDetector(
           onTap: _toggleLike,
           child: Row(
@@ -213,7 +298,7 @@ class _GenieCardState extends State<GenieCard> {
               ),
               const SizedBox(width: 4),
               Text(
-                _formatLikes(_likesCount), // Usa la funzione di formattazione
+                widget.fileHelper.formatLikes(_likesCount),
                 style: const TextStyle(
                   color: Colors.white,
                   fontFamily: 'Roboto',
@@ -222,29 +307,33 @@ class _GenieCardState extends State<GenieCard> {
             ],
           ),
         ),
+        // Comments
         _buildIconWithCount(CupertinoIcons.chat_bubble, widget.genie.comments),
-        FutureBuilder<bool>(
-          future: isSaved,
-          builder: (context, snapshot) {
-            final bool saved = snapshot.data ?? false;
-            return GestureDetector(
-              onTap: _toggleSave,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: saved ? Colors.yellow : Colors.transparent,
-                    width: 2,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  CupertinoIcons.bookmark,
-                  color: saved ? Colors.yellow : Colors.white,
+        // Bookmarks with Count
+        GestureDetector(
+          onTap: _toggleSave,
+          child: Row(
+            children: [
+              FutureBuilder<bool>(
+                future: isSaved,
+                builder: (context, snapshot) {
+                  final bool saved = snapshot.data ?? false;
+                  return Icon(
+                    CupertinoIcons.bookmark,
+                    color: saved ? Colors.yellow : Colors.white,
+                  );
+                },
+              ),
+              const SizedBox(width: 4),
+              Text(
+                widget.fileHelper.formatLikes(_savedCount),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Roboto',
                 ),
               ),
-            );
-          },
+            ],
+          ),
         ),
         // Menu Popup
         PopupMenuButton<String>(
@@ -271,8 +360,10 @@ class _GenieCardState extends State<GenieCard> {
               ),
             ),
           ],
-          icon:
-              const Icon(CupertinoIcons.ellipsis_vertical, color: Colors.white),
+          icon: const Icon(
+            CupertinoIcons.ellipsis_vertical,
+            color: Colors.white,
+          ),
           offset: Offset(0, 40),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
@@ -374,7 +465,11 @@ class _GenieCardState extends State<GenieCard> {
       final response = await widget.genieHelper.deleteGenie(widget.genie);
       // Refresh the UI
       if (response) {
-        Navigator.of(context).pop();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => ProfilePage(userData: widget.user)),
+        );
       } else {
         throw Exception("Failed to delete Genie");
       }
@@ -471,20 +566,9 @@ class _GenieCardState extends State<GenieCard> {
     );
   }
 
-  //Helper function to download the PDF file
-
-  Future<String> downloadPdf(String url) async {
-    final response = await http.get(Uri.parse(url));
-    final directory = await getApplicationDocumentsDirectory();
-    final filePath = '${directory.path}/temp.pdf';
-    final file = File(filePath);
-    await file.writeAsBytes(response.bodyBytes);
-    return filePath;
-  }
-
   // Show the PDF file in a dialog
   void _showPdfOverlay(BuildContext context, String pdfUrl) async {
-    final localPath = await downloadPdf(pdfUrl);
+    final localPath = await widget.fileHelper.downloadPdf(pdfUrl);
     showDialog(
       context: context,
       barrierDismissible: true, // Close on tap outside

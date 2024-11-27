@@ -39,6 +39,31 @@ class GenieHelper {
     }
   }
 
+  Future<int> getSavedCount(Genie genieData) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      final response = await http.get(
+        Uri.parse('$genieAPI/get-bookmarks?genieId=${genieData.id}'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseBody = json.decode(response.body);
+        if (responseBody.containsKey('bookmarks')) {
+          return responseBody['bookmarks'];
+        } else {
+          throw Exception('Invalid response format');
+        }
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint("Error getting bookmarks count: $e");
+      return 0;
+    }
+  }
+
   Future<GenieResponse> createGenie(Genie genieData) async {
     final url = '$genieAPI/create';
     final token = await _secureStorage.read(key: 'auth_token');

@@ -109,7 +109,12 @@ class _PostCardCreationState extends State<PostCardCreation>
           _files!.add(File(result.files.single.path!));
         });
       } else {}
-    } catch (e) {}
+    } catch (e) {
+      AlertDialog(
+        title: const Text('Error'),
+        content: Text(e.toString()),
+      );
+    }
   }
 
   // Get Actual position
