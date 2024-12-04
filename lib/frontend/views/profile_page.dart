@@ -38,8 +38,8 @@ class _ProfilePageState extends State<ProfilePage> {
   int _selectedTabIndex = 0;
   late Future<List<Map<String, dynamic>>> geniesFuture;
 
-  late Future<int> followersFuture;
-  late Future<int> followingFuture;
+  int followersFuture = 0;
+  int followingFuture = 0;
 
   @override
   void initState() {
@@ -50,9 +50,17 @@ class _ProfilePageState extends State<ProfilePage> {
     isBannerNull = true;
     isProfileNull = true;
     geniesFuture = _fetchGenies();
-    followersFuture = userHelper.getFollowerCount(_currentUserData.uid);
-    followingFuture = userHelper.getFollowingCount(_currentUserData.uid);
+    _loadFollowCount();
     _loadImages(); // Load images on init
+  }
+
+  Future<void> _loadFollowCount() async {
+    followersFuture = await userHelper.getFollowerCount();
+    followingFuture = await userHelper.getFollowingCount();
+    setState(() {
+      followersFuture = followersFuture;
+      followingFuture = followingFuture;
+    });
   }
 
   Future<void> _loadImages() async {
@@ -278,20 +286,8 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            FutureBuilder<int>(
-              future: followersFuture,
-              builder: (context, snapshot) {
-                final count = snapshot.data ?? 0;
-                return _buildStatColumn('Followers', _formatNumber(count));
-              },
-            ),
-            FutureBuilder<int>(
-              future: followingFuture,
-              builder: (context, snapshot) {
-                final count = snapshot.data ?? 0;
-                return _buildStatColumn('Following', _formatNumber(count));
-              },
-            ),
+            _buildStatColumn('Followers', _formatNumber(followersFuture)),
+            _buildStatColumn('Following', _formatNumber(followingFuture)),
           ],
         ),
       ),

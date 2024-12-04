@@ -124,18 +124,24 @@ class UserHelper {
     }
   }
 
-  Future<int> getFollowerCount(String uid) async {
+  Future<int> getFollowerCount() async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.post(
-          Uri.parse('$genieApiUser/get-follower-count'),
-          headers: {'Authorization': 'Bearer $token'},
-          body: json.encode(uid));
+        Uri.parse('$userApiProfile/get-follower-count'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      debugPrint('response: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> followerResponse =
             json.decode(response.body);
-        final int followerCount = followerResponse['followerCount'];
+        final int followerCount = followerResponse['followersCount'];
+
         return followerCount;
       } else {
         return 0;
@@ -145,13 +151,14 @@ class UserHelper {
     }
   }
 
-  Future<int> getFollowingCount(String uid) async {
+  Future<int> getFollowingCount() async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
-      final response = await http.post(
-          Uri.parse('$genieApiUser/get-following-count'),
-          headers: {'Authorization': 'Bearer $token'},
-          body: json.encode(uid));
+      final response = await http
+          .post(Uri.parse('$userApiProfile/get-following-count'), headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json; charset=UTF-8',
+      });
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> followerResponse =
