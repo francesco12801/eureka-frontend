@@ -4,7 +4,9 @@ import 'package:eureka_final_version/frontend/constants/routes.dart';
 import 'package:eureka_final_version/frontend/models/post.dart';
 import 'package:eureka_final_version/frontend/components/my_navigation_bar.dart';
 import 'package:eureka_final_version/frontend/models/user.dart';
+import 'package:eureka_final_version/frontend/views/login_page.dart';
 import 'package:eureka_final_version/frontend/views/search_page.dart';
+import 'package:eureka_final_version/frontend/api/navigation_helper.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -41,7 +43,7 @@ class _HomePageState extends State<HomePage> {
                   loginRoute,
                 );
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         ),
@@ -49,7 +51,7 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    bool isVerified = await authHelper.checkToken(token);
+    bool isVerified = await authHelper.checkToken();
 
     if (isVerified) {
       switch (index) {
@@ -100,12 +102,14 @@ class _HomePageState extends State<HomePage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Verification Failed'),
-          content: Text('Token verification failed. Please log in again.'),
+          title: const Text('Verification Failed'),
+          content:
+              const Text('Token verification failed. Please log in again.'),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close the dialog
+                Navigator.pop(context);
+                NavigationHelper.navigateToPage(context, const LoginPage());
               },
               child: Text('OK'),
             ),

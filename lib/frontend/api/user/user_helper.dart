@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -9,9 +9,75 @@ class UserHelper {
   // URLs for the spring server and node server
   static final String genieApiUser = dotenv.env['SPRING_API_USER'] ?? '';
   static final String editProfile = dotenv.env['SPRING_API_EDIT_PROFILE'] ?? '';
+  static final String userApiProfile = dotenv.env['SPRING_API_USER'] ?? '';
 
   // Instance of FlutterSecureStorage
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
+  Future<String?> getPublicProfileImage(String uid) async {
+    final token = await _secureStorage.read(key: 'auth_token');
+    final response = await http.post(
+      Uri.parse('$userApiProfile/get-public-profile-image'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode(uid),
+    );
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> imageResponse = json.decode(response.body);
+      final String? profileImage = imageResponse['profileImage'];
+      return profileImage;
+    } else {
+      return null;
+    }
+  }
+
+  Future<String?> getPublicBannerImage(String uid) async {
+    final token = await _secureStorage.read(key: 'auth_token');
+    final response = await http.post(
+      Uri.parse('$userApiProfile/get-public-banner-image'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode(uid),
+    );
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> imageResponse = json.decode(response.body);
+      final String? bannerImage = imageResponse['bannerImage'];
+      return bannerImage;
+    } else {
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getUserPublicInformation(String uid) async {
+    // Make a get request to the spring server to get public information of the user
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      final response = await http.post(
+        Uri.parse('$userApiProfile/get-user'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: json.encode(uid),
+      );
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> publicInformation =
+            json.decode(response.body);
+        final Map<String, dynamic> eurekaPublicProfile =
+            publicInformation['user'];
+
+        return eurekaPublicProfile;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
 
   Future<String?> getProfileImage() async {
     // Make a get request to the spring server to get profile image of the user
@@ -58,6 +124,49 @@ class UserHelper {
     }
   }
 
+  Future<int> getFollowerCount(String uid) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      final response = await http.post(
+          Uri.parse('$genieApiUser/get-follower-count'),
+          headers: {'Authorization': 'Bearer $token'},
+          body: json.encode(uid));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> followerResponse =
+            json.decode(response.body);
+        final int followerCount = followerResponse['followerCount'];
+        return followerCount;
+      } else {
+        return 0;
+      }
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  Future<int> getFollowingCount(String uid) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      final response = await http.post(
+          Uri.parse('$genieApiUser/get-following-count'),
+          headers: {'Authorization': 'Bearer $token'},
+          body: json.encode(uid));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> followerResponse =
+            json.decode(response.body);
+        final int followerCount = followerResponse['followingCount'];
+        debugPrint('followingCount oooooooooo: $followerCount');
+        return followerCount;
+      } else {
+        return 0;
+      }
+    } catch (e) {
+      return 0;
+    }
+  }
+
   Future<String> getEmail() async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
@@ -98,8 +207,49 @@ class UserHelper {
     }
   }
 
-  // I need some method since the file can be nullable
-  // Change profile image
+  Future<bool> sendFriendRequest(String friendId) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      debugPrint('friendId: $friendId');
+      final response = await http.post(
+        Uri.parse('$genieApiUser/friend-request?friendId=$friendId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode != 200) {
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Error sending friend request: $e');
+      return false;
+    }
+    return true;
+  }
+
+  Future<bool> isAlreadyFriend(String uid) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      final response = await http.get(
+        Uri.parse('$genieApiUser/is-already-friend?uid=$uid'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> friendResponse = json.decode(response.body);
+        final bool isFriend = friendResponse['isFriend'];
+        return isFriend;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Error checking if already friend: $e');
+      return false;
+    }
+  }
 
   Future<Map<String, String>> changeProfileImage(XFile? imageProfile) async {
     try {
@@ -134,8 +284,6 @@ class UserHelper {
     }
   }
 
-  // Change banner image
-
   Future<Map<String, String>> changeBannerImage(XFile? imageBanner) async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
@@ -169,8 +317,6 @@ class UserHelper {
       return {};
     }
   }
-
-  // Change both profile and banner images
 
   Future<Map<String, String>> uploadImages(
       XFile? profileImage, XFile? bannerImage) async {

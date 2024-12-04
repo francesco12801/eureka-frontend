@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 class EurekaUser {
   const EurekaUser({
     required this.nameSurname,
+    required this.uid,
     required this.interests,
     required this.university,
     required this.purpose,
@@ -35,15 +36,17 @@ class EurekaUser {
       bannerImage: map['bannerImage'] as String?,
       description: map['description'] as String?,
       bio: map['bio'] as String?,
-      followersCount: map['followersCount'] as int? ?? 0,
+      followersCount: map['followerCount'] as int? ?? 0,
       followingCount: map['followingCount'] as int? ?? 0,
       postsCount: map['postsCount'] as int? ?? 0,
       createdAt: map['createdAt'] as String?,
       lastLogin: map['lastLogin'] as String?,
+      uid: map['uid'] as String? ?? '',
     );
   }
 
   final String nameSurname;
+  final String uid;
   final List<String> interests;
   final String university;
   final String purpose;
@@ -55,11 +58,12 @@ class EurekaUser {
   final int followersCount;
   final int followingCount;
   final int postsCount;
-  final String? createdAt; // Timestamp when user was created
-  final String? lastLogin; // Timestamp of last login
+  final String? createdAt;
+  final String? lastLogin;
 
   Map<String, dynamic> toMap() {
     return {
+      'uid': uid,
       'nameSurname': nameSurname,
       'interests': interests.join(', '),
       'purpose': purpose,
@@ -82,6 +86,7 @@ class EurekaUser {
     String? bannerImage,
   }) {
     return EurekaUser(
+      uid: uid,
       nameSurname: nameSurname,
       interests: interests,
       university: university,
@@ -101,6 +106,7 @@ class EurekaUser {
 
   EurekaUser clearUser() {
     return const EurekaUser(
+      uid: '',
       nameSurname: '',
       interests: [],
       university: '',

@@ -5,7 +5,6 @@ import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/constants/routes.dart';
 import 'package:eureka_final_version/frontend/models/user.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SettingPage extends StatefulWidget {
   final EurekaUser userData;
@@ -23,8 +22,6 @@ class _SettingPageState extends State<SettingPage> {
 
   // Storage
 
-  final _secureStorage = const FlutterSecureStorage();
-
   Future<void> _clearLocalResources() async {
     setState(() {
       widget.userData.clearUser();
@@ -35,12 +32,10 @@ class _SettingPageState extends State<SettingPage> {
     setState(() {
       _isLoggingOut = true;
     });
-    final token = await _secureStorage.read(key: 'auth_token');
-    final response = await authHelper.logout(token!);
+    final response = await authHelper.logout();
 
     if (response.success) {
       await _clearLocalResources();
-      // Navigate to the login page
       Navigator.pushNamedAndRemoveUntil(context, loginRoute, (route) => false);
     } else {
       setState(() {

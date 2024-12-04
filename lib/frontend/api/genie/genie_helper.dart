@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ffi';
 import 'dart:io';
 import 'package:eureka_final_version/frontend/models/genie_response.dart';
 import 'package:flutter/material.dart';
@@ -266,6 +265,36 @@ class GenieHelper {
       }
     } catch (e) {
       print("Errore durante il recupero dei genies: $e");
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getPublicUserGenies(String uid) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      final response = await http.post(
+        Uri.parse('$genieAPI/get-public-user-genies'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(uid),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseBody = json.decode(response.body);
+
+        if (responseBody.containsKey('genies')) {
+          final List<dynamic> genies = responseBody['genies'];
+          return genies.cast<Map<String, dynamic>>();
+        } else {
+          throw Exception('Invalid response format');
+        }
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error getting public user genies: $e');
       return [];
     }
   }

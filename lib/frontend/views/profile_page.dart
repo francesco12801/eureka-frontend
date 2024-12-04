@@ -4,6 +4,7 @@ import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
 import 'package:eureka_final_version/frontend/components/personal_card.dart';
 import 'package:eureka_final_version/frontend/components/tab_bar_profile.dart';
 import 'package:eureka_final_version/frontend/constants/routes.dart';
+import 'package:eureka_final_version/frontend/constants/utils.dart';
 import 'package:eureka_final_version/frontend/models/genie.dart';
 import 'package:eureka_final_version/frontend/models/user.dart';
 import 'package:eureka_final_version/frontend/views/edit_profile_page.dart';
@@ -37,6 +38,9 @@ class _ProfilePageState extends State<ProfilePage> {
   int _selectedTabIndex = 0;
   late Future<List<Map<String, dynamic>>> geniesFuture;
 
+  late Future<int> followersFuture;
+  late Future<int> followingFuture;
+
   @override
   void initState() {
     super.initState();
@@ -46,6 +50,8 @@ class _ProfilePageState extends State<ProfilePage> {
     isBannerNull = true;
     isProfileNull = true;
     geniesFuture = _fetchGenies();
+    followersFuture = userHelper.getFollowerCount(_currentUserData.uid);
+    followingFuture = userHelper.getFollowingCount(_currentUserData.uid);
     _loadImages(); // Load images on init
   }
 
@@ -62,11 +68,6 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() {}); // Refresh UI with loaded images
   }
 
-  // Refresh images manually when clicking the profile
-  Future<void> refreshImages() async {
-    await _loadImages();
-  }
-
   Future<List<Map<String, dynamic>>> _fetchGenies() async {
     return genieHelper.getUserGenies();
   }
@@ -79,7 +80,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void onTap(int index) async {
     String? token = await _secureStorage.read(key: 'auth_token');
-    if (token == null || !(await authHelper.checkToken(token))) {
+    if (token == null || !(await authHelper.checkToken())) {
       Navigator.pushNamed(context, loginRoute);
       return;
     }
@@ -129,7 +130,36 @@ class _ProfilePageState extends State<ProfilePage> {
                   } else if (snapshot.hasError) {
                     return Center(child: Text('Error: ${snapshot.error}'));
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('No genies found.'));
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SizedBox(height: 50),
+                            Text(
+                              'No Genies Yet 😢',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: 20),
+                            Text(
+                              'Unleash your creativity and create the first Genie! 💡',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
                   } else {
                     return ListView.builder(
                       shrinkWrap: true,
@@ -171,7 +201,7 @@ class _ProfilePageState extends State<ProfilePage> {
               image: DecorationImage(
                 image: isBannerNull == false
                     ? NetworkImage(bannerImageUrl!)
-                    : const AssetImage('assets/images/techPlaceholder.jpg')
+                    : const AssetImage('assets/images/slogan-nobackground.png')
                         as ImageProvider,
                 fit: BoxFit.cover,
               ),
@@ -211,9 +241,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   image: DecorationImage(
                     image: isProfileNull == false
                         ? NetworkImage(profileImageUrl!)
-                        : const AssetImage(
-                                'assets/images/profile_picture_placeholder.jpg')
-                            as ImageProvider,
+                        : NetworkImage(placeholderProfilePicture),
                     fit: BoxFit.contain,
                   ),
                 ),
@@ -250,14 +278,48 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildStatColumn(
-                'Followers', _formatNumber(_currentUserData.followersCount)),
-            _buildStatColumn(
-                'Following', _formatNumber(_currentUserData.followingCount)),
+            FutureBuilder<int>(
+              future: followersFuture,
+              builder: (context, snapshot) {
+                final count = snapshot.data ?? 0;
+                return _buildStatColumn('Followers', _formatNumber(count));
+              },
+            ),
+            FutureBuilder<int>(
+              future: followingFuture,
+              builder: (context, snapshot) {
+                final count = snapshot.data ?? 0;
+                return _buildStatColumn('Following', _formatNumber(count));
+              },
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildStatColumn(String label, String value) {
+    return Column(
+      children: [
+        Text(value,
+            style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: white,
+                fontFamily: 'Roboto')),
+        const SizedBox(height: 5),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 16, color: greyIOS, fontFamily: 'Roboto')),
+      ],
+    );
+  }
+
+  String _formatNumber(int number) {
+    if (number >= 1000000)
+      return '${(number / 1000000).toStringAsFixed(1)} mln';
+    if (number >= 1000) return '${(number / 1000).toStringAsFixed(1)} k';
+    return number.toString();
   }
 
   Widget _buildProfileInfo() {
@@ -290,29 +352,5 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
     );
-  }
-
-  Widget _buildStatColumn(String label, String value) {
-    return Column(
-      children: [
-        Text(value,
-            style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: white,
-                fontFamily: 'Roboto')),
-        const SizedBox(height: 5),
-        Text(label,
-            style: const TextStyle(
-                fontSize: 16, color: greyIOS, fontFamily: 'Roboto')),
-      ],
-    );
-  }
-
-  String _formatNumber(int number) {
-    if (number >= 1000000)
-      return '${(number / 1000000).toStringAsFixed(1)} mln';
-    if (number >= 1000) return '${(number / 1000).toStringAsFixed(1)} k';
-    return number.toString();
   }
 }

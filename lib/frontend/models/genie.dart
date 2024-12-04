@@ -1,3 +1,5 @@
+import 'package:flutter/src/widgets/icon_data.dart';
+
 class Genie {
   // Constants
   final String? id;
@@ -66,6 +68,8 @@ class Genie {
       saved: data['saved'] as int? ?? 0,
     );
   }
+
+  IconData? get iconData => null;
 
   // Method to convert a Genie instance to a map
   Map<String, dynamic> toMap() {

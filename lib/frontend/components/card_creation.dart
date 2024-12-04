@@ -27,6 +27,7 @@ class PostCardCreation extends StatefulWidget {
 class _PostCardCreationState extends State<PostCardCreation>
     with TickerProviderStateMixin {
   // Variables to manage position etc...
+
   bool isPublic = true;
   bool isLocationEnabled = false;
   List<File>? _images = [];
@@ -64,9 +65,14 @@ class _PostCardCreationState extends State<PostCardCreation>
     );
   }
 
+  Future<String?> getProfileImage() async {
+    return await userHelper.getProfileImage();
+  }
+
   Future<void> createLocalGenie() async {
     final title = _titleController.text;
     final description = _contentController.text;
+
     final target = isPublic ? 'public' : 'private';
     final nameSurnameCreator = widget.userData.nameSurname;
     final professionUser = widget.userData.profession;
@@ -237,60 +243,75 @@ class _PostCardCreationState extends State<PostCardCreation>
   }
 
   Widget _buildHeader() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return FutureBuilder<String?>(
+      future: getProfileImage(), // Call your asynchronous function
+      builder: (context, snapshot) {
+        String? profileImage = snapshot.data; // Fetched image URL
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Show a loading indicator while fetching the image
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError || profileImage == null) {
+          profileImage = 'https://www.gravatar.com/avatar/?d=mp';
+        }
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-                onPressed: () {
-                  // Go back to the first page
-                  Navigator.pop(context);
-                },
-                icon: const Icon(
-                  CupertinoIcons.clear,
-                  color: white,
-                )),
-            const Spacer(),
-            MyTextButton(text: "Share", onPressed: createLocalGenie),
-          ],
-        ),
-        Stack(
-          alignment: Alignment.topRight,
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                    color: const Color.fromARGB(255, 255, 255, 255), width: 1),
-              ),
-              child: CircleAvatar(
-                backgroundImage: NetworkImage(widget.userData.profileImage!),
-                radius: 35,
-              ),
-            ),
-            Positioned(
-              top: -1,
-              right: -1,
-              child: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black.withOpacity(0.5),
-                  border: Border.all(color: white, width: 1),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  icon: const Icon(
+                    CupertinoIcons.clear,
+                    color: white,
+                  ),
                 ),
-                child: const Icon(
-                  CupertinoIcons.add,
-                  color: white,
-                  size: 16,
+                const Spacer(),
+                MyTextButton(text: "Share", onPressed: createLocalGenie),
+              ],
+            ),
+            Stack(
+              alignment: Alignment.topRight,
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color.fromARGB(255, 255, 255, 255),
+                      width: 1,
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    backgroundImage: NetworkImage(profileImage),
+                    radius: 35,
+                  ),
                 ),
-              ),
+                Positioned(
+                  top: -1,
+                  right: -1,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.black.withOpacity(0.5),
+                      border: Border.all(color: white, width: 1),
+                    ),
+                    child: const Icon(
+                      CupertinoIcons.add,
+                      color: white,
+                      size: 16,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -305,8 +326,7 @@ class _PostCardCreationState extends State<PostCardCreation>
             onPressed: () async {
               Navigator.of(context).pop();
               final picker = ImagePicker();
-              final pickedFiles =
-                  await picker.pickMultiImage(); // Seleziona più immagini
+              final pickedFiles = await picker.pickMultiImage();
               if (pickedFiles != null) {
                 setState(() {
                   _images = pickedFiles

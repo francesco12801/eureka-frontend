@@ -5,14 +5,17 @@ import 'package:eureka_final_version/frontend/models/login_response.dart';
 import 'package:eureka_final_version/frontend/models/logout_response.dart';
 import 'package:eureka_final_version/frontend/models/signup_response.dart';
 import 'package:eureka_final_version/frontend/models/user.dart';
+
 import 'package:http/http.dart' as http;
 
 class AuthHelper {
   static final String urlSpring = dotenv.env['SPRING_API_AUTH'] ?? '';
   static final String middleware = dotenv.env['MIDDLEWARE_API_URL'] ?? '';
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   // Check if the token is valid
-  Future<bool> checkToken(String token) async {
+  Future<bool> checkToken() async {
     try {
+      final token = await _secureStorage.read(key: 'auth_token');
       final response =
           await http.get(Uri.parse('$urlSpring/verify-token'), headers: {
         'Authorization': 'Bearer $token',
@@ -42,9 +45,6 @@ class AuthHelper {
       String purpose,
       String profession,
       List<String> interests) async {
-    // const url = 'http://localhost:8070/signup';
-    final url = '$middleware/signup';
-
     // Data to be sent to the backend without the uid
     final Map<String, dynamic> signupData = {
       'nameSurname': nameSurname,
@@ -62,7 +62,7 @@ class AuthHelper {
     try {
       // Call the backend to sign up the user
       final response = await http.post(
-        Uri.parse(url),
+        Uri.parse('$middleware/signup'),
         headers: {"Content-Type": "application/json"},
         body: json.encode(signupData),
       );
@@ -70,6 +70,12 @@ class AuthHelper {
       if (response.statusCode == 200) {
         // Parse the response body to extract the uid
         final Map<String, dynamic> responseMap = json.decode(response.body);
+        // Get token from the response
+        final String token = responseMap['token'];
+        // Put token in the secure storage
+        const storage = FlutterSecureStorage();
+        await storage.write(key: 'auth_token', value: token);
+
         final EurekaUser newUserEureka = EurekaUser.fromMap(responseMap);
 
         // Return success response with the new user
@@ -84,12 +90,6 @@ class AuthHelper {
 
   Future<LoginResponse> userLogin(String emailControllerText,
       String passwordControllerText, bool errorMessage) async {
-    // const url = 'http://localhost:8070/login';
-
-    final url = '$middleware/login';
-
-    // 192.168.1.235
-
     final Map<String, String> signupData = {
       'email': emailControllerText,
       'password': passwordControllerText,
@@ -98,7 +98,7 @@ class AuthHelper {
     try {
       // Call the backend
       final response = await http.post(
-        Uri.parse(url),
+        Uri.parse('$middleware/login'),
         headers: {"Content-Type": "application/json"},
         body: json.encode(signupData),
       );
@@ -131,21 +131,20 @@ class AuthHelper {
     }
   }
 
-  Future<LogoutResponse> logout(String token) async {
+  Future<LogoutResponse> logout() async {
     try {
-      final response = await http.post(
-        Uri.parse(
-            '$middleware/signout'), // Replace with your actual logout service URL
+      final token = await _secureStorage.read(key: 'auth_token');
+      final response = await http.get(
+        Uri.parse('$urlSpring/logout'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
         },
       );
-      final Map<String, dynamic> checkResponse = json.decode(response.body);
-      final int statusCode = checkResponse['statusCode'];
-      if (statusCode == 200) {
-        // If logout is successful, clear local resources
 
+      if (response.statusCode == 200) {
+        const storage = FlutterSecureStorage();
+        await storage.delete(key: 'auth_token');
         return LogoutResponse(success: true);
       } else {
         return LogoutResponse(success: false);

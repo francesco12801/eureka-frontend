@@ -72,7 +72,7 @@ class _ContinueSignUpState extends State<ContinueSignUp> {
           currentContext,
           MaterialPageRoute(
             builder: (context) => TransitionBeforeLanding(
-              userData: signUpResponse.user!, // Pass the user data
+              userData: signUpResponse.user!,
             ),
           ),
         );

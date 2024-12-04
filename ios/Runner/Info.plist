@@ -63,6 +63,13 @@
 <string>This app requires access to the camera to allow you to take a profile picture.</string>
 <key>NSDocumentsUsageDescription</key>
 <string>App needs access to documents for processing PDF files.</string>
+<key>UIBackgroundModes</key>
+<array>
+    <string>fetch</string>
+    <string>remote-notification</string>
+</array>
 
+<key>firebase_messaging_auto_init_enabled</key>
+<true/>
 </dict>
 </plist>
