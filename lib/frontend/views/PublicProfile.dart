@@ -308,16 +308,14 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
               ),
             ),
           ),
-          // Add back button
           Positioned(
             top: 10,
             left: 10,
             child: IconButton(
-              icon: Icon(Icons.arrow_back_ios, color: Colors.white),
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ),
-          // Add Friend button
           Positioned(
             top: 10,
             right: 10,
@@ -325,15 +323,15 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                 ? ElevatedButton(
                     onPressed: _sendFriendRequest,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF4CAF50), // Vibrant green
+                      backgroundColor: const Color(0xFF4CAF50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       elevation: 3,
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.person_add, color: Colors.white, size: 18),
@@ -348,33 +346,94 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                       ],
                     ),
                   )
-                : SizedBox.shrink(), // Hide if can't add friend
+                : const SizedBox.shrink(),
           ),
           Positioned(
             bottom: -50,
             left: 0,
             right: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: greyIOS, width: 1),
-              ),
+            child: GestureDetector(
+              onTap: () {
+                if (!isProfileNull) {
+                  _showImageOverlay(context, profileImageUrl!);
+                }
+              },
               child: Container(
-                height: 100,
-                width: 100,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  image: DecorationImage(
-                    image: isProfileNull == false
-                        ? NetworkImage(profileImageUrl!)
-                        : NetworkImage(placeholderProfilePicture),
-                    fit: BoxFit.contain,
+                  border: Border.all(color: greyIOS, width: 1),
+                ),
+                child: Container(
+                  height: 100,
+                  width: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    image: DecorationImage(
+                      image: isProfileNull == false
+                          ? NetworkImage(profileImageUrl!)
+                          : NetworkImage(placeholderProfilePicture),
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showImageOverlay(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.85),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          children: [
+            Positioned(
+              right: 16,
+              top: 16,
+              child: IconButton(
+                icon: const Icon(
+                  Icons.close,
+                  color: Colors.white,
+                  size: 30,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+            Center(
+              child: TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 300),
+                tween: Tween(begin: 0.0, end: 1.0),
+                builder: (context, value, child) {
+                  return Transform.scale(
+                    scale: value,
+                    child: Container(
+                      constraints: BoxConstraints(
+                        maxWidth: MediaQuery.of(context).size.width * 0.9,
+                        maxHeight: MediaQuery.of(context).size.height * 0.7,
+                      ),
+                      child: ClipOval(
+                        child: InteractiveViewer(
+                          minScale: 0.5,
+                          maxScale: 4.0,
+                          child: Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
