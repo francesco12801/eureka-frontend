@@ -11,3 +11,4 @@ const networkRoute = '/network/';
 const profileRoute = '/profile/';
 const profileEditRoute = '/profile/edit/';
 const publicProfileRoute = '/profile/public/';
+const followerListRoute = '/profile/followers/';

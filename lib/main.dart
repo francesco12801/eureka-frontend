@@ -3,20 +3,21 @@ import 'package:eureka_final_version/frontend/api/notification/firebase_manager.
 import 'package:eureka_final_version/frontend/models/genie.dart';
 import 'package:eureka_final_version/frontend/models/profile_preview.dart';
 import 'package:eureka_final_version/frontend/models/user.dart';
-import 'package:eureka_final_version/frontend/views/accept_terms.dart';
-import 'package:eureka_final_version/frontend/views/edit_profile_page.dart';
-import 'package:eureka_final_version/frontend/views/eureka_page.dart';
-import 'package:eureka_final_version/frontend/views/network_page.dart';
-import 'package:eureka_final_version/frontend/views/notification.dart';
-import 'package:eureka_final_version/frontend/views/profile_page.dart';
+import 'package:eureka_final_version/frontend/views/AcceptTerms.dart';
+import 'package:eureka_final_version/frontend/views/EditProfile.dart';
+import 'package:eureka_final_version/frontend/views/EurekaPage.dart';
+import 'package:eureka_final_version/frontend/views/FollowerListPage.dart';
+import 'package:eureka_final_version/frontend/views/NetworkPage.dart';
+import 'package:eureka_final_version/frontend/views/NotificationPage.dart';
+import 'package:eureka_final_version/frontend/views/ProfilePage.dart';
 import 'package:eureka_final_version/frontend/constants/routes.dart';
-import 'package:eureka_final_version/frontend/views/continue_signup_page.dart';
-import 'package:eureka_final_version/frontend/views/home_page.dart';
-import 'package:eureka_final_version/frontend/views/login_page.dart';
-import 'package:eureka_final_version/frontend/views/preview_loading.dart';
-import 'package:eureka_final_version/frontend/views/public_profile.dart';
-import 'package:eureka_final_version/frontend/views/signup_page.dart';
-import 'package:eureka_final_version/frontend/views/transition_before_landing.dart';
+import 'package:eureka_final_version/frontend/views/ContinueSignUp.dart';
+import 'package:eureka_final_version/frontend/views/HomePage.dart';
+import 'package:eureka_final_version/frontend/views/LoginPage.dart';
+import 'package:eureka_final_version/frontend/views/PreviewLoading.dart';
+import 'package:eureka_final_version/frontend/views/PublicProfile.dart';
+import 'package:eureka_final_version/frontend/views/SignupPage.dart';
+import 'package:eureka_final_version/frontend/views/TransitionBeforeLanding.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -99,7 +100,14 @@ class EurekaApp extends StatelessWidget {
           final userData =
               ModalRoute.of(context)!.settings.arguments as EurekaUserPublic;
           return PublicProfilePage(userData: userData);
-        }
+        },
+        followerListRoute: (context) {
+          final userData =
+              ModalRoute.of(context)!.settings.arguments as EurekaUser;
+          final isFollowers =
+              ModalRoute.of(context)!.settings.arguments as bool;
+          return FollowersPage(userId: userData.uid, isFollowers: isFollowers);
+        },
       },
     );
   }

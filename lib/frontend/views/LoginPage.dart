@@ -5,8 +5,8 @@ import 'package:eureka_final_version/frontend/components/my_input_button.dart';
 import 'package:eureka_final_version/frontend/components/my_motivational_quotes.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/components/my_text_button.dart';
-import 'package:eureka_final_version/frontend/views/home_page.dart';
-import 'package:eureka_final_version/frontend/views/signup_page.dart';
+import 'package:eureka_final_version/frontend/views/HomePage.dart';
+import 'package:eureka_final_version/frontend/views/SignupPage.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {

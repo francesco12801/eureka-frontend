@@ -1,12 +1,13 @@
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
+import 'package:eureka_final_version/frontend/components/GeniePublicCard.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
-import 'package:eureka_final_version/frontend/components/personal_card.dart';
 import 'package:eureka_final_version/frontend/components/tab_bar_profile.dart';
 import 'package:eureka_final_version/frontend/constants/utils.dart';
 import 'package:eureka_final_version/frontend/models/genie.dart';
 import 'package:eureka_final_version/frontend/models/profile_preview.dart';
 import 'package:eureka_final_version/frontend/models/user.dart';
+import 'package:eureka_final_version/frontend/views/FollowerListPage.dart';
 import 'package:flutter/material.dart';
 
 class PublicProfilePage extends StatefulWidget {
@@ -53,8 +54,6 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
 
   Future<void> _sendFriendRequest() async {
     try {
-      // TODO: Implement friend request sending logic
-      // This might involve calling a method from userHelper or a dedicated friend service
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Friend request sent!')),
       );
@@ -148,10 +147,30 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                     return const Center(
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 24.0),
-                        child: Text(
-                          'No Genies Yet 😢',
-                          style: TextStyle(fontSize: 24, color: Colors.white),
-                          textAlign: TextAlign.center,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SizedBox(height: 50),
+                            Text(
+                              'No Genies Yet 😢',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: 20),
+                            Text(
+                              'Unleash your creativity and create the first Genie! 💡',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -162,11 +181,10 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                       itemCount: snapshot.data!.length,
                       itemBuilder: (context, index) {
                         final genie = Genie.fromMap(snapshot.data![index]);
-                        return GenieCard(
-                          genie: genie,
-                          user: _currentUserData!,
-                          genieHelper: genieHelper,
-                        );
+                        return GeniePublicCard(
+                            genie: genie,
+                            user: _currentUserData!,
+                            genieHelper: genieHelper);
                       },
                     );
                   }
@@ -237,15 +255,38 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildStatColumn('Followers',
-                      _formatNumber(_currentUserData!.followersCount)),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FollowersPage(
+                              userId: _currentUserData!.uid, isFollowers: true),
+                        ),
+                      );
+                    },
+                    child: _buildStatColumn('Followers',
+                        _formatNumber(_currentUserData!.followersCount)),
+                  ),
                   if (_canAddFriend)
                     IconButton(
                       icon: const Icon(Icons.person_add, color: white),
                       onPressed: _sendFriendRequest,
                     ),
-                  _buildStatColumn('Following',
-                      _formatNumber(_currentUserData!.followingCount)),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FollowersPage(
+                              userId: _currentUserData!.uid,
+                              isFollowers: false),
+                        ),
+                      );
+                    },
+                    child: _buildStatColumn('Following',
+                        _formatNumber(_currentUserData!.followingCount)),
+                  ),
                 ],
               ),
             ),

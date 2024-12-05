@@ -4,7 +4,7 @@ import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
 import 'package:eureka_final_version/frontend/components/my_text_button.dart';
 import 'package:eureka_final_version/frontend/models/genie.dart';
 import 'package:eureka_final_version/frontend/models/user.dart';
-import 'package:eureka_final_version/frontend/views/accept_terms.dart';
+import 'package:eureka_final_version/frontend/views/AcceptTerms.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

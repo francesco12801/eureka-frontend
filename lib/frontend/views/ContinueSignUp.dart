@@ -5,7 +5,7 @@ import 'package:eureka_final_version/frontend/components/my_input_button.dart';
 import 'package:eureka_final_version/frontend/components/my_motivational_quotes.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/constants/interest.dart';
-import 'package:eureka_final_version/frontend/views/transition_before_landing.dart';
+import 'package:eureka_final_version/frontend/views/TransitionBeforeLanding.dart';
 import 'package:flutter/material.dart';
 
 class ContinueSignUp extends StatefulWidget {

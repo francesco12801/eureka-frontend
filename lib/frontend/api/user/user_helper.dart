@@ -14,6 +14,62 @@ class UserHelper {
   // Instance of FlutterSecureStorage
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
+  Future<List<Map<String, dynamic>>> getFollowers(String userId) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      final response = await http.post(
+        Uri.parse('$userApiProfile/get-followers'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(userId),
+      );
+      debugPrint('response: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final followersData = data['followers'] as Map<String, dynamic>;
+
+        // Convert the followers map into a list of maps
+        final List<Map<String, dynamic>> followersList = [];
+        followersData.forEach((key, value) {
+          followersList.add(Map<String, dynamic>.from(value));
+        });
+
+        return followersList;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      debugPrint('Error getting followers: $e');
+      return [];
+    }
+  }
+
+  Future<List<dynamic>> getFollowing(String userId) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      final response = await http.post(
+        Uri.parse('$userApiProfile/get-following'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(userId),
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> following = json.decode(response.body);
+        return following;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      debugPrint('Error getting following: $e');
+      return [];
+    }
+  }
+
   Future<String?> getPublicProfileImage(String uid) async {
     final token = await _secureStorage.read(key: 'auth_token');
     final response = await http.post(

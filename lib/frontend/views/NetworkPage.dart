@@ -4,7 +4,7 @@ import 'package:eureka_final_version/frontend/components/my_navigation_bar.dart'
 import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/constants/routes.dart';
 import 'package:eureka_final_version/frontend/models/user.dart';
-import 'package:eureka_final_version/frontend/views/login_page.dart';
+import 'package:eureka_final_version/frontend/views/LoginPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 

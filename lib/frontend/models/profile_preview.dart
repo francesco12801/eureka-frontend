@@ -1,3 +1,4 @@
+import 'package:eureka_final_version/frontend/constants/utils.dart';
 import 'package:flutter/cupertino.dart';
 
 class EurekaUserPublic extends SearchResult {
@@ -12,6 +13,15 @@ class EurekaUserPublic extends SearchResult {
     required this.profession,
     required this.profileImage,
   });
+
+  static EurekaUserPublic fromMap(Map<String, dynamic> map) {
+    return EurekaUserPublic(
+      uid: map['uid'] ?? '',
+      nameSurname: map['nameSurname'] ?? '',
+      profession: map['profession'],
+      profileImage: map['profileImage'] ?? placeholderProfilePicture,
+    );
+  }
 }
 
 // Genie result model

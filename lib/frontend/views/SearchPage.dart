@@ -5,7 +5,7 @@ import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/constants/utils.dart';
 import 'package:eureka_final_version/frontend/models/profile_preview.dart';
 import 'package:eureka_final_version/frontend/models/user.dart';
-import 'package:eureka_final_version/frontend/views/public_profile.dart';
+import 'package:eureka_final_version/frontend/views/PublicProfile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -451,7 +451,7 @@ class _SearchPageState extends State<SearchPage> {
                     color: Colors.white,
                     onPressed: () async {
                       // Add genie logic - potentially make an API call to add the genie
-                      final response = await _addGenie(result);
+                      await _addGenie(result);
                     },
                   ),
                 ),

@@ -1,6 +1,5 @@
 import 'package:eureka_final_version/frontend/api/file_helper.dart';
 import 'package:eureka_final_version/frontend/api/toggle/toggle_helper.dart';
-import 'package:eureka_final_version/frontend/views/ProfilePage.dart';
 import 'package:flutter/material.dart';
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
@@ -10,7 +9,7 @@ import 'package:eureka_final_version/frontend/models/user.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 
-class GenieCard extends StatefulWidget {
+class GeniePublicCard extends StatefulWidget {
   final Genie genie;
   final EurekaUser user;
 
@@ -20,7 +19,7 @@ class GenieCard extends StatefulWidget {
   final ToggleHelper toggleHelper = ToggleHelper();
   final FileHelper fileHelper = FileHelper();
 
-  GenieCard({
+  GeniePublicCard({
     required this.genie,
     required this.user,
     required this.genieHelper,
@@ -28,10 +27,10 @@ class GenieCard extends StatefulWidget {
   });
 
   @override
-  _GenieCardState createState() => _GenieCardState();
+  _GeniePublicCardState createState() => _GeniePublicCardState();
 }
 
-class _GenieCardState extends State<GenieCard> {
+class _GeniePublicCardState extends State<GeniePublicCard> {
   late Future<String?> _profileImageFuture;
   late Future<List<String>> _genieImagesFuture;
   late Future<List<String>> _genieFilesFuture;
@@ -188,95 +187,6 @@ class _GenieCardState extends State<GenieCard> {
     );
   }
 
-  // Widget _buildActionBar(BuildContext context) {
-  //   return Row(
-  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //     children: [
-  //       GestureDetector(
-  //         onTap: _toggleLike,
-  //         child: Row(
-  //           children: [
-  //             FutureBuilder<bool>(
-  //               future: isLiked,
-  //               builder: (context, snapshot) {
-  //                 final bool liked = snapshot.data ?? false;
-  //                 return Icon(
-  //                   CupertinoIcons.heart,
-  //                   color: liked ? Colors.red : Colors.white,
-  //                 );
-  //               },
-  //             ),
-  //             const SizedBox(width: 4),
-  //             Text(
-  //               widget.fileHelper.formatLikes(_likesCount),
-  //               style: const TextStyle(
-  //                 color: Colors.white,
-  //                 fontFamily: 'Roboto',
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //       _buildIconWithCount(CupertinoIcons.chat_bubble, widget.genie.comments),
-  //       FutureBuilder<bool>(
-  //         future: isSaved,
-  //         builder: (context, snapshot) {
-  //           final bool saved = snapshot.data ?? false;
-  //           return GestureDetector(
-  //             onTap: _toggleSave,
-  //             child: Container(
-  //               padding: const EdgeInsets.all(4),
-  //               decoration: BoxDecoration(
-  //                 border: Border.all(
-  //                   color: saved ? Colors.yellow : Colors.transparent,
-  //                   width: 2,
-  //                 ),
-  //                 borderRadius: BorderRadius.circular(8),
-  //               ),
-  //               child: Icon(
-  //                 CupertinoIcons.bookmark,
-  //                 color: saved ? Colors.yellow : Colors.white,
-  //               ),
-  //             ),
-  //           );
-  //         },
-  //       ),
-  //       // Menu Popup
-  //       PopupMenuButton<String>(
-  //         onSelected: (String value) {
-  //           if (value == 'edit') {
-  //             _modifyGenie(context);
-  //           } else if (value == 'delete') {
-  //             _deleteGenie(context);
-  //           }
-  //         },
-  //         itemBuilder: (BuildContext context) => [
-  //           PopupMenuItem<String>(
-  //             value: 'edit',
-  //             child: _buildCustomMenuItem(
-  //               icon: CupertinoIcons.pencil,
-  //               text: 'Edit',
-  //             ),
-  //           ),
-  //           PopupMenuItem<String>(
-  //             value: 'delete',
-  //             child: _buildCustomMenuItem(
-  //               icon: CupertinoIcons.trash,
-  //               text: 'Delete',
-  //             ),
-  //           ),
-  //         ],
-  //         icon:
-  //             const Icon(CupertinoIcons.ellipsis_vertical, color: Colors.white),
-  //         offset: Offset(0, 40),
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(15),
-  //         ),
-  //         color: Colors.black87,
-  //       ),
-  //     ],
-  //   );
-  // }
   Widget _buildActionBar(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -334,41 +244,6 @@ class _GenieCardState extends State<GenieCard> {
               ),
             ],
           ),
-        ),
-        // Menu Popup
-        PopupMenuButton<String>(
-          onSelected: (String value) {
-            if (value == 'edit') {
-              _modifyGenie(context);
-            } else if (value == 'delete') {
-              _deleteGenie(context);
-            }
-          },
-          itemBuilder: (BuildContext context) => [
-            PopupMenuItem<String>(
-              value: 'edit',
-              child: _buildCustomMenuItem(
-                icon: CupertinoIcons.pencil,
-                text: 'Edit',
-              ),
-            ),
-            PopupMenuItem<String>(
-              value: 'delete',
-              child: _buildCustomMenuItem(
-                icon: CupertinoIcons.trash,
-                text: 'Delete',
-              ),
-            ),
-          ],
-          icon: const Icon(
-            CupertinoIcons.ellipsis_vertical,
-            color: Colors.white,
-          ),
-          offset: Offset(0, 40),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          color: Colors.black87,
         ),
       ],
     );
@@ -441,60 +316,18 @@ class _GenieCardState extends State<GenieCard> {
   Widget _buildCustomMenuItem({required IconData icon, required String text}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.transparent, // Colore scuro per la voce del menu
-        borderRadius: BorderRadius.circular(12), // Bordi arrotondati
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: ListTile(
         leading: Icon(icon, color: Colors.white),
         title: Text(
           text,
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
-  }
-
-  void _modifyGenie(BuildContext context) {
-    // Aggiungi il codice per modificare il genie
-    print('Modifica il genie');
-  }
-
-  void _deleteGenie(BuildContext context) async {
-    // Wait the delete operation to complete
-    try {
-      final response = await widget.genieHelper.deleteGenie(widget.genie);
-      // Refresh the UI
-      if (response) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => ProfilePage(userData: widget.user)),
-        );
-      } else {
-        throw Exception("Failed to delete Genie");
-      }
-    } catch (e) {
-      // Show an error dialog
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Error'),
-            content: const Text(
-              'Error deleting the Genie. Please try again later.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-    }
   }
 
   Widget _getFiles() {

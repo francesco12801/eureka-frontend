@@ -1,6 +1,6 @@
 import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/models/user.dart';
-import 'package:eureka_final_version/frontend/views/home_page.dart';
+import 'package:eureka_final_version/frontend/views/HomePage.dart';
 import 'package:flutter/material.dart';
 
 class TransitionBeforeLanding extends StatefulWidget {

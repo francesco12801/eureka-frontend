@@ -6,7 +6,7 @@ import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/components/my_text_button.dart';
 import 'package:eureka_final_version/frontend/components/my_text_field.dart';
 import 'package:eureka_final_version/frontend/models/user.dart';
-import 'package:eureka_final_version/frontend/views/profile_page.dart';
+import 'package:eureka_final_version/frontend/views/ProfilePage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
