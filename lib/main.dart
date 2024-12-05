@@ -106,7 +106,12 @@ class EurekaApp extends StatelessWidget {
               ModalRoute.of(context)!.settings.arguments as EurekaUser;
           final isFollowers =
               ModalRoute.of(context)!.settings.arguments as bool;
-          return FollowersPage(userId: userData.uid, isFollowers: isFollowers);
+          final currentUserId =
+              ModalRoute.of(context)!.settings.arguments as String;
+          return FollowersPage(
+              userId: userData.uid,
+              isFollowers: isFollowers,
+              currentUserId: currentUserId);
         },
       },
     );

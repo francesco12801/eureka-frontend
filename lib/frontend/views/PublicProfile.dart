@@ -23,6 +23,8 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
   final GenieHelper genieHelper = GenieHelper();
   final UserHelper userHelper = UserHelper();
 
+  String? _currentUserId;
+
   EurekaUser? _currentUserData;
   String? profileImageUrl;
   String? bannerImageUrl;
@@ -42,6 +44,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
   Future<void> _initializeProfile() async {
     await _setPublicProfile();
     if (_currentUserData != null) {
+      _currentUserId = await userHelper.getCurrentUserId();
       _loadImages();
       geniesFuture = _fetchGenies();
       // Check if the user can be added as a friend
@@ -393,7 +396,9 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => FollowersPage(
-                              userId: _currentUserData!.uid, isFollowers: true),
+                              currentUserId: _currentUserId!,
+                              userId: _currentUserData!.uid,
+                              isFollowers: true),
                         ),
                       );
                     },
@@ -406,6 +411,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => FollowersPage(
+                              currentUserId: _currentUserId!,
                               userId: _currentUserData!.uid,
                               isFollowers: false),
                         ),

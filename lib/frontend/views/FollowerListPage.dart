@@ -1,3 +1,4 @@
+// import 'package:eureka_final_version/frontend/models/profile_preview.dart';
 import 'package:eureka_final_version/frontend/models/profile_preview.dart';
 import 'package:eureka_final_version/frontend/views/PublicProfile.dart';
 import 'package:flutter/material.dart';
@@ -8,9 +9,14 @@ import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
 class FollowersPage extends StatefulWidget {
   final String userId;
   final bool isFollowers;
+  final String currentUserId; // Aggiungi questo parametro
 
-  const FollowersPage(
-      {super.key, required this.userId, required this.isFollowers});
+  const FollowersPage({
+    super.key,
+    required this.userId,
+    required this.isFollowers,
+    required this.currentUserId, // Aggiungi questo parametro
+  });
 
   @override
   _FollowersPageState createState() => _FollowersPageState();
@@ -40,9 +46,19 @@ class _FollowersPageState extends State<FollowersPage> {
 
       debugPrint('Follow data wooooow: $followData');
 
+      // Converti i dati e ordina la lista
+      List<EurekaUserPublic> sortedList =
+          followData.map((data) => EurekaUserPublic.fromMap(data)).toList();
+
+      // Ordina la lista mettendo il profilo corrente per primo
+      sortedList.sort((a, b) {
+        if (a.uid == widget.currentUserId) return -1;
+        if (b.uid == widget.currentUserId) return 1;
+        return a.nameSurname.compareTo(b.nameSurname);
+      });
+
       setState(() {
-        _followList =
-            followData.map((data) => EurekaUserPublic.fromMap(data)).toList();
+        _followList = sortedList;
         _isLoading = false;
       });
     } catch (e) {
@@ -114,15 +130,18 @@ class _FollowersPageState extends State<FollowersPage> {
   }
 
   Widget _buildFollowListItem(EurekaUserPublic user) {
+    final bool isCurrentUser = user.uid == widget.currentUserId;
+
     return ListTile(
-      onTap: () {
-        // Navigate to user's profile page
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => PublicProfilePage(userData: user),
-          ),
-        );
-      },
+      onTap: isCurrentUser
+          ? null // Disabilita il tap per il profilo corrente
+          : () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => PublicProfilePage(userData: user),
+                ),
+              );
+            },
       contentPadding: const EdgeInsets.symmetric(vertical: 8),
       leading: CircleAvatar(
         radius: 30,
@@ -131,11 +150,11 @@ class _FollowersPageState extends State<FollowersPage> {
             CachedNetworkImageProvider(user.profileImage) as ImageProvider,
       ),
       title: Text(
-        user.nameSurname,
-        style: const TextStyle(
+        user.nameSurname + (isCurrentUser ? ' (You)' : ''),
+        style: TextStyle(
           color: white,
           fontSize: 16,
-          fontWeight: FontWeight.w600,
+          fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.w600,
         ),
       ),
       subtitle: Text(
@@ -145,24 +164,25 @@ class _FollowersPageState extends State<FollowersPage> {
           fontSize: 14,
         ),
       ),
-      trailing: ElevatedButton(
-        onPressed: () {
-          // Navigate to user's profile page
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => PublicProfilePage(userData: user),
+      trailing: isCurrentUser
+          ? null // Nessun pulsante per il profilo corrente
+          : ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => PublicProfilePage(userData: user),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white.withOpacity(0.2),
+                foregroundColor: white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text('View Profile'),
             ),
-          );
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white.withOpacity(0.2),
-          foregroundColor: white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-        ),
-        child: const Text('View Profile'),
-      ),
     );
   }
 }
