@@ -54,9 +54,8 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
 
   Future<void> _sendFriendRequest() async {
     try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Friend request sent!')),
-      );
+      await widget.userHelper.sendFriendRequest(_currentUserData!.uid);
+      showSuccessOverlay(context, _currentUserData!.nameSurname);
 
       // Update the state to reflect that a request has been sent
       setState(() {
@@ -67,6 +66,97 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
         SnackBar(content: Text('Failed to send friend request: $e')),
       );
     }
+  }
+
+  void showSuccessOverlay(BuildContext context, String nameSurname) {
+    final overlay = Overlay.of(context);
+    final overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          // Dark semi-transparent background
+          Positioned.fill(
+            child: ModalBarrier(
+              color: Colors.black.withOpacity(0.5),
+              dismissible: false,
+            ),
+          ),
+          // Centered overlay
+          Positioned.fill(
+            child: Center(
+              child: TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 300),
+                tween: Tween(begin: 0.8, end: 1.0),
+                builder: (context, scale, child) {
+                  return Transform.scale(
+                    scale: scale,
+                    child: Opacity(
+                      opacity: scale,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 40),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24.0, vertical: 16.0),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2C2C2C), // Deep charcoal
+                            borderRadius: BorderRadius.circular(16.0),
+                            border: Border.all(
+                                color: const Color(
+                                    0xFF4A4A4A), // Slightly lighter border
+                                width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                blurRadius: 25,
+                                spreadRadius: 2,
+                                offset: const Offset(0, 12),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.check_circle,
+                                color: Color(0xFF4CAF50),
+                                size: 28.0,
+                              ),
+                              const SizedBox(width: 16),
+                              Flexible(
+                                child: Text(
+                                  'You are now following $nameSurname!',
+                                  style: const TextStyle(
+                                    color: Colors.white70, // Soft white
+                                    fontSize: 17.0,
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: 0.5,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // Insert the overlay
+    overlay.insert(overlayEntry);
+
+    // Remove the overlay after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      overlayEntry.remove();
+    });
   }
 
   Future<bool> _checkFriendEligibility() async {
@@ -215,6 +305,48 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
               ),
             ),
           ),
+          // Add back button
+          Positioned(
+            top: 10,
+            left: 10,
+            child: IconButton(
+              icon: Icon(Icons.arrow_back_ios, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+          // Add Friend button
+          Positioned(
+            top: 10,
+            right: 10,
+            child: _canAddFriend
+                ? ElevatedButton(
+                    onPressed: _sendFriendRequest,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF4CAF50), // Vibrant green
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      elevation: 3,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.person_add, color: Colors.white, size: 18),
+                        SizedBox(width: 8),
+                        Text(
+                          'Add Friend',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : SizedBox.shrink(), // Hide if can't add friend
+          ),
           Positioned(
             bottom: -50,
             left: 0,
@@ -249,11 +381,11 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GestureDetector(
                     onTap: () {
@@ -268,11 +400,6 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                     child: _buildStatColumn('Followers',
                         _formatNumber(_currentUserData!.followersCount)),
                   ),
-                  if (_canAddFriend)
-                    IconButton(
-                      icon: const Icon(Icons.person_add, color: white),
-                      onPressed: _sendFriendRequest,
-                    ),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(

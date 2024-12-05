@@ -43,7 +43,8 @@ class _GeniePublicCardState extends State<GeniePublicCard> {
   @override
   void initState() {
     super.initState();
-    _profileImageFuture = widget.userHelper.getProfileImage();
+    _profileImageFuture =
+        widget.userHelper.getPublicProfileImage(widget.user.uid);
     _genieImagesFuture = widget.genieHelper.getImageFromGenie(widget.genie);
     _genieFilesFuture = widget.genieHelper.getFilesFromGenie(widget.genie);
     _initializeLikesCount();
@@ -177,6 +178,7 @@ class _GeniePublicCardState extends State<GeniePublicCard> {
                   ),
                   _getImages(),
                   _getFiles(),
+                  const SizedBox(height: 8),
                   _buildActionBar(context),
                 ],
               ),

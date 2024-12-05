@@ -47,7 +47,7 @@ class UserHelper {
     }
   }
 
-  Future<List<dynamic>> getFollowing(String userId) async {
+  Future<List<Map<String, dynamic>>> getFollowing(String userId) async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.post(
@@ -59,8 +59,15 @@ class UserHelper {
         body: json.encode(userId),
       );
       if (response.statusCode == 200) {
-        final List<dynamic> following = json.decode(response.body);
-        return following;
+        final Map<String, dynamic> data = json.decode(response.body);
+        final followingData = data['following'] as Map<String, dynamic>;
+
+        // Convert the followers map into a list of maps
+        final List<Map<String, dynamic>> followingList = [];
+        followingData.forEach((key, value) {
+          followingList.add(Map<String, dynamic>.from(value));
+        });
+        return followingList;
       } else {
         return [];
       }

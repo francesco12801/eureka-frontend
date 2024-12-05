@@ -178,6 +178,7 @@ class _GenieCardState extends State<GenieCard> {
                   ),
                   _getImages(),
                   _getFiles(),
+                  const SizedBox(height: 8),
                   _buildActionBar(context),
                 ],
               ),
