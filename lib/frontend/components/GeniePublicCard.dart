@@ -1,5 +1,6 @@
 import 'package:eureka_final_version/frontend/api/file_helper.dart';
 import 'package:eureka_final_version/frontend/api/toggle/toggle_helper.dart';
+import 'package:eureka_final_version/frontend/components/GeniePublicFullView.dart';
 import 'package:flutter/material.dart';
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
@@ -139,53 +140,95 @@ class _GeniePublicCardState extends State<GeniePublicCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 18),
-            decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(20),
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                GenieFullScreenView(
+              genie: widget.genie,
+              user: widget.user,
+              genieHelper: widget.genieHelper,
+              onLikePressed: _toggleLike,
+              onSavePressed: _toggleSave,
+              isLiked: isLiked,
+              isSaved: isSaved,
+              likesCount: _likesCount,
+              savedCount: _savedCount,
+              profileImageFuture: _profileImageFuture,
+              genieImagesFuture: _genieImagesFuture,
+              genieFilesFuture: _genieFilesFuture,
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(),
-                  const SizedBox(height: 16),
-                  Text(
-                    widget.genie.title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: white,
-                      fontFamily: 'Roboto',
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    widget.genie.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontFamily: 'Roboto',
-                    ),
-                  ),
-                  _getImages(),
-                  _getFiles(),
-                  const SizedBox(height: 8),
-                  _buildActionBar(context),
-                ],
-              ),
-            ),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              const begin = Offset(0.0, 1.0);
+              const end = Offset.zero;
+              const curve = Curves.easeInOutCubic;
+              var tween = Tween(begin: begin, end: end).chain(
+                CurveTween(curve: curve),
+              );
+              return SlideTransition(
+                position: animation.drive(tween),
+                child: child,
+              );
+            },
           ),
+        );
+      },
+      child: Hero(
+        tag: 'genie-card-${widget.genie.id}',
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                margin:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 18),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(),
+                        const SizedBox(height: 16),
+                        Text(
+                          widget.genie.title,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: white,
+                            fontFamily: 'Roboto',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          widget.genie.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Roboto',
+                          ),
+                        ),
+                        _getImages(),
+                        _getFiles(),
+                        const SizedBox(height: 8),
+                        _buildActionBar(context),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            )
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -203,7 +246,7 @@ class _GeniePublicCardState extends State<GeniePublicCard> {
                 builder: (context, snapshot) {
                   final bool liked = snapshot.data ?? false;
                   return Icon(
-                    CupertinoIcons.heart,
+                    liked ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
                     color: liked ? Colors.red : Colors.white,
                   );
                 },
@@ -231,7 +274,9 @@ class _GeniePublicCardState extends State<GeniePublicCard> {
                 builder: (context, snapshot) {
                   final bool saved = snapshot.data ?? false;
                   return Icon(
-                    CupertinoIcons.bookmark,
+                    saved
+                        ? CupertinoIcons.bookmark_fill
+                        : CupertinoIcons.bookmark,
                     color: saved ? Colors.yellow : Colors.white,
                   );
                 },
@@ -312,23 +357,6 @@ class _GeniePublicCardState extends State<GeniePublicCard> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildCustomMenuItem({required IconData icon, required String text}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListTile(
-        leading: Icon(icon, color: Colors.white),
-        title: Text(
-          text,
-          style:
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
     );
   }
 

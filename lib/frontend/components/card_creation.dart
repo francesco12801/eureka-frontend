@@ -76,6 +76,7 @@ class _PostCardCreationState extends State<PostCardCreation>
     final target = isPublic ? 'public' : 'private';
     final nameSurnameCreator = widget.userData.nameSurname;
     final professionUser = widget.userData.profession;
+    final location = _city;
 
     for (final image in _images!) {
       imageStringList!.add(image.path);
@@ -88,6 +89,7 @@ class _PostCardCreationState extends State<PostCardCreation>
     final Genie dataGenie = Genie(
       title: title,
       description: description,
+      location: location,
       target: target,
       images: imageStringList,
       files: fileStringList,
@@ -327,13 +329,11 @@ class _PostCardCreationState extends State<PostCardCreation>
               Navigator.of(context).pop();
               final picker = ImagePicker();
               final pickedFiles = await picker.pickMultiImage();
-              if (pickedFiles != null) {
-                setState(() {
-                  _images = pickedFiles
-                      .map((pickedFile) => File(pickedFile.path))
-                      .toList();
-                });
-              }
+              setState(() {
+                _images = pickedFiles
+                    .map((pickedFile) => File(pickedFile.path))
+                    .toList();
+              });
             },
           ),
           CupertinoActionSheetAction(

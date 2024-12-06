@@ -28,11 +28,9 @@ void main() async {
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform);
-    await FirebaseNotificationManager().initNotification();
   } catch (e) {
     debugPrint("Error loading init resources: $e");
   }
-
   runApp(const EurekaApp());
 }
 

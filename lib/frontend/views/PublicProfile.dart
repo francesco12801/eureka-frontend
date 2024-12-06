@@ -1,6 +1,9 @@
+import 'dart:ui';
+
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
 import 'package:eureka_final_version/frontend/components/GeniePublicCard.dart';
+import 'package:eureka_final_version/frontend/components/my_friend_request_button.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/components/tab_bar_profile.dart';
 import 'package:eureka_final_version/frontend/constants/utils.dart';
@@ -8,6 +11,7 @@ import 'package:eureka_final_version/frontend/models/genie.dart';
 import 'package:eureka_final_version/frontend/models/profile_preview.dart';
 import 'package:eureka_final_version/frontend/models/user.dart';
 import 'package:eureka_final_version/frontend/views/FollowerListPage.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class PublicProfilePage extends StatefulWidget {
@@ -57,18 +61,115 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
 
   Future<void> _sendFriendRequest() async {
     try {
-      await widget.userHelper.sendFriendRequest(_currentUserData!.uid);
-      showSuccessOverlay(context, _currentUserData!.nameSurname);
-
-      // Update the state to reflect that a request has been sent
-      setState(() {
-        _canAddFriend = false;
-      });
+      if (_canAddFriend) {
+        showSuccessOverlay(context, _currentUserData!.nameSurname);
+        await widget.userHelper.sendFriendRequest(_currentUserData!.uid);
+        setState(() {
+          _canAddFriend = false;
+        });
+      } else {
+        showEliminateOverlay(context, _currentUserData!.nameSurname);
+        await widget.userHelper.removeFriend(_currentUserData!.uid);
+        setState(() {
+          _canAddFriend = true;
+        });
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send friend request: $e')),
+        SnackBar(content: Text('Failed to update friend status: $e')),
       );
     }
+  }
+
+  void showEliminateOverlay(BuildContext context, String nameSurname) {
+    final overlay = Overlay.of(context);
+    final overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          // Dark semi-transparent background
+          Positioned.fill(
+            child: ModalBarrier(
+              color: Colors.black.withOpacity(0.5),
+              dismissible: false,
+            ),
+          ),
+          // Centered overlay
+          Positioned.fill(
+            child: Center(
+              child: TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 300),
+                tween: Tween(begin: 0.8, end: 1.0),
+                builder: (context, scale, child) {
+                  return Transform.scale(
+                    scale: scale,
+                    child: Opacity(
+                      opacity: scale,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 40),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24.0, vertical: 16.0),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2C2C2C), // Deep charcoal
+                            borderRadius: BorderRadius.circular(16.0),
+                            border: Border.all(
+                                color: const Color(
+                                    0xFF4A4A4A), // Slightly lighter border
+                                width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                blurRadius: 25,
+                                spreadRadius: 2,
+                                offset: const Offset(0, 12),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.check_circle,
+                                color: Color.fromARGB(255, 152, 51, 0),
+                                size: 28.0,
+                              ),
+                              const SizedBox(width: 16),
+                              Flexible(
+                                child: Text(
+                                  'You are no longer following $nameSurname.',
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 17.0,
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: 0.5,
+                                  ),
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // Insert the overlay
+    overlay.insert(overlayEntry);
+
+    // Remove the overlay after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      overlayEntry.remove();
+    });
   }
 
   void showSuccessOverlay(BuildContext context, String nameSurname) {
@@ -165,7 +266,6 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
   Future<bool> _checkFriendEligibility() async {
     final response =
         await widget.userHelper.isAlreadyFriend(_currentUserData!.uid);
-
     if (response) {
       return false;
     }
@@ -317,36 +417,12 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
             ),
           ),
           Positioned(
-            top: 10,
-            right: 10,
-            child: _canAddFriend
-                ? ElevatedButton(
-                    onPressed: _sendFriendRequest,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4CAF50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      elevation: 3,
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.person_add, color: Colors.white, size: 18),
-                        SizedBox(width: 8),
-                        Text(
-                          'Add Friend',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : const SizedBox.shrink(),
+            top: 20,
+            right: 20,
+            child: AnimatedFollowButton(
+              isFollowing: !_canAddFriend,
+              onPressed: _sendFriendRequest,
+            ),
           ),
           Positioned(
             bottom: -50,
@@ -354,7 +430,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
             right: 0,
             child: GestureDetector(
               onTap: () {
-                if (!isProfileNull) {
+                if (!isProfileNull && _canAddFriend) {
                   _showImageOverlay(context, profileImageUrl!);
                 }
               },

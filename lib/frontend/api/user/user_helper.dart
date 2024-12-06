@@ -323,6 +323,26 @@ class UserHelper {
     return true;
   }
 
+  Future<bool> removeFriend(String friendId) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      final response = await http.post(
+        Uri.parse('$genieApiUser/remove-friend?friendId=$friendId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+      if (response.statusCode != 200) {
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Error removing friend: $e');
+      return false;
+    }
+    return true;
+  }
+
   Future<bool> isAlreadyFriend(String uid) async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');

@@ -1,10 +1,14 @@
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
 class FirebaseNotificationManager {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  static final String urlSpring = dotenv.env['SPRING_API_USER'] ?? '';
 
-  Future<void> initNotification() async {
+  Future<void> initNotification(String uid) async {
     // Request permission
     NotificationSettings settings = await _firebaseMessaging.requestPermission(
       alert: true,
@@ -26,11 +30,26 @@ class FirebaseNotificationManager {
       String? fcmToken = await _firebaseMessaging.getToken();
       debugPrint("FCM Token: $fcmToken");
 
-      // Get APNS token (for iOS)
-      if (defaultTargetPlatform == TargetPlatform.iOS) {
-        String? apnsToken = await _firebaseMessaging.getAPNSToken();
-        debugPrint("APNS Token: $apnsToken");
+      if (fcmToken != null) {
+        // Save the token to the backend
+
+        debugPrint("Saving token to the backend");
+
+        final response = await http.post(
+          Uri.parse('$urlSpring/save-token'),
+          headers: {"Content-Type": "application/json"},
+          body: json.encode({"uid": uid, "fcmToken": fcmToken}),
+        );
+
+        debugPrint("Response status code: ${response.body}");
+
+        if (response.statusCode == 200) {
+          debugPrint("Token saved successfully");
+        } else {
+          debugPrint("Error saving token");
+        }
       }
+      // backend call to save the token
     } catch (e) {
       debugPrint("Error getting token: $e");
     }

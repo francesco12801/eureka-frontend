@@ -1,3 +1,5 @@
+import 'package:eureka_final_version/frontend/api/notification/firebase_manager.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
@@ -110,9 +112,16 @@ class AuthHelper {
             json.decode(response.body);
         final EurekaUser userData =
             EurekaUser.fromMap(userDataResponse['user']);
-        final String token = userDataResponse['token'];
 
-        // Receiving from the backend
+        // get uid from the response
+
+        final String uid = userData.uid;
+
+        debugPrint('UID oooooooooooo i am here : $uid');
+
+        // Initialize the notification manager
+        await FirebaseNotificationManager().initNotification(uid);
+        final String token = userDataResponse['token'];
 
         // Put token in the secure storage
         const storage = FlutterSecureStorage();
