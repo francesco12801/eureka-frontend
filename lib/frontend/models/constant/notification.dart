@@ -1,5 +1,6 @@
 class NotificationEureka {
-  final String userId;
+  final String id;
+  final String fromUserId;
   final String title;
   final String body;
   final String type;
@@ -7,7 +8,8 @@ class NotificationEureka {
   final int createdAt;
 
   NotificationEureka({
-    required this.userId,
+    required this.id,
+    required this.fromUserId,
     required this.title,
     required this.body,
     required this.type,
@@ -17,7 +19,8 @@ class NotificationEureka {
 
   factory NotificationEureka.fromJson(Map<String, dynamic> json) {
     return NotificationEureka(
-      userId: json['userId'],
+      id: json['id'],
+      fromUserId: json['fromUserId'],
       title: json['title'],
       body: json['body'],
       type: json['type'],
@@ -28,7 +31,8 @@ class NotificationEureka {
 
   Map<String, dynamic> toJson() {
     return {
-      'userId': userId,
+      'id': id,
+      'fromUserId': fromUserId,
       'title': title,
       'body': body,
       'type': type,
@@ -39,6 +43,6 @@ class NotificationEureka {
 
   @override
   String toString() {
-    return 'NotificationEureka{userId: $userId, title: $title, body: $body, type: $type, read: $read, createdAt: $createdAt}';
+    return 'NotificationEureka{id: $id ,fromUserId: $fromUserId, title: $title, body: $body, type: $type, read: $read, createdAt: $createdAt}';
   }
 }

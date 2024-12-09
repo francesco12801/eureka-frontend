@@ -1,10 +1,13 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:eureka_final_version/frontend/models/constant/notification.dart';
+import 'package:eureka_final_version/frontend/models/constant/profile_preview.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 class UserHelper {
   // URLs for the spring server and node server
@@ -316,27 +319,9 @@ class UserHelper {
         },
       );
 
-      if (response.statusCode != 200) {
-        final userId = await getCurrentUserId();
-        NotificationEureka followerNotification = NotificationEureka(
-          userId: userId,
-          title: 'Friend Request',
-          body: 'You have a new friend request from $userId',
-          type: 'friendRequest',
-        );
-        // send notification to the backend and save it in the database
-        final response = await http.post(
-          Uri.parse('$notificationApi/save-notification'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-          body: json.encode(followerNotification.toJson()),
-        );
-        if (response.statusCode == 200) {
-          // send notification to the user
-          return true;
-        }
+      if (response.statusCode == 200) {
+        // send notification to the user
+        return true;
       } else {
         return false;
       }
@@ -344,7 +329,6 @@ class UserHelper {
       debugPrint('Error sending friend request: $e');
       return false;
     }
-    return true;
   }
 
   Future<bool> removeFriend(String friendId) async {
@@ -502,6 +486,40 @@ class UserHelper {
       }
     } catch (e) {
       return {};
+    }
+  }
+
+  Future<EurekaUserPublic> getUserPublicProfile(String uid) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+
+      final response = await http.post(
+        Uri.parse('$userApiProfile/get-public-profile'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(uid),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        debugPrint('Response data: $responseData');
+
+        // Estrai il publicProfile dalla risposta
+        final Map<String, dynamic> userPublicProfile =
+            responseData['publicProfile'];
+        debugPrint('userPublicProfile: $userPublicProfile');
+
+        final EurekaUserPublic eurekaUserPublic =
+            EurekaUserPublic.fromMap(userPublicProfile);
+        debugPrint('eurekaUserPublic: $eurekaUserPublic');
+        return eurekaUserPublic;
+      } else {
+        throw Exception('Failed to load user public profile');
+      }
+    } catch (e) {
+      throw Exception('Error fetching user public profile: $e');
     }
   }
 }

@@ -95,6 +95,30 @@ class Genie {
     };
   }
 
+  // FromJson method
+  factory Genie.fromJson(Map<String, dynamic> json) {
+    return Genie(
+      id: json['id'] as String?,
+      userId: json['userId'] as String?,
+      title: json['title'] as String,
+      description: json['description'] as String,
+      location: json['location'] as String?,
+      createdAt: json['createdAt'] as int?,
+      nameSurnameCreator: json['nameSurnameCreator'] as String,
+      target: json['target'] as String,
+      videos: (json['videos'] as List<dynamic>?)?.cast<String>(),
+      images: (json['images'] as List<dynamic>?)?.cast<String>(),
+      files: (json['files'] as List<dynamic>?)?.cast<String>(),
+      collaborators: (json['collaborators'] as List<dynamic>?)?.cast<String>(),
+      tags: (json['tags'] as List<dynamic>?)?.cast<String>(),
+      professionUser: json['professionUser'] as String?,
+      profileImageUser: json['profileImageUser'] as String?,
+      likes: json['likes'] as int? ?? 0,
+      comments: json['comments'] as int? ?? 0,
+      saved: json['saved'] as int? ?? 0,
+    );
+  }
+
   // CopyWith method
   Genie copyWith({
     String? id,

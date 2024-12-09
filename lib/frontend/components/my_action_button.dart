@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 class ActionButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback onPressed;
-  final Future<bool> isActive;
+  final Future<bool>? isActive;
   final Future<bool>? isBookmark;
 
   const ActionButton({
-    Key? key,
+    super.key,
     required this.icon,
     required this.onPressed,
-    required this.isActive,
+    this.isActive,
     this.isBookmark,
-  }) : super(key: key);
+  });
 
   @override
   State<ActionButton> createState() => _ActionButtonState();
@@ -26,27 +26,35 @@ class _ActionButtonState extends State<ActionButton> {
   @override
   void initState() {
     super.initState();
-    widget.isActive.then((value) => setState(() => _currentState = value));
+    widget.isActive?.then((value) => setState(() => _currentState = value));
     widget.isBookmark?.then((value) => setState(() => _isBookmarked = value));
   }
 
   @override
   Widget build(BuildContext context) {
+    // Check if it's a comment or share icon
+    bool isStaticIcon = widget.icon == CupertinoIcons.chat_bubble ||
+        widget.icon == CupertinoIcons.share;
+
     IconData currentIcon = widget.icon;
-    if (widget.icon == CupertinoIcons.heart) {
-      currentIcon =
-          _currentState ? CupertinoIcons.heart_fill : CupertinoIcons.heart;
-    } else if (widget.icon == CupertinoIcons.bookmark) {
-      currentIcon = _currentState
-          ? CupertinoIcons.bookmark_fill
-          : CupertinoIcons.bookmark;
+    if (!isStaticIcon) {
+      if (widget.icon == CupertinoIcons.heart) {
+        currentIcon =
+            _currentState ? CupertinoIcons.heart_fill : CupertinoIcons.heart;
+      } else if (widget.icon == CupertinoIcons.bookmark) {
+        currentIcon = _currentState
+            ? CupertinoIcons.bookmark_fill
+            : CupertinoIcons.bookmark;
+      }
     }
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          setState(() => _currentState = !_currentState);
+          if (!isStaticIcon) {
+            setState(() => _currentState = !_currentState);
+          }
           widget.onPressed();
         },
         borderRadius: BorderRadius.circular(12),
@@ -54,9 +62,11 @@ class _ActionButtonState extends State<ActionButton> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           child: Icon(
             currentIcon,
-            color: _currentState
-                ? (_isBookmarked ? Colors.yellow : Colors.red)
-                : Colors.white,
+            color: isStaticIcon
+                ? Colors.white
+                : (_currentState
+                    ? (_isBookmarked ? Colors.yellow : Colors.red)
+                    : Colors.white),
             size: 24,
           ),
         ),

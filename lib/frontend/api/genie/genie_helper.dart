@@ -298,4 +298,33 @@ class GenieHelper {
       return [];
     }
   }
+
+  // get genie by id
+  Future<Genie> getGenieById(String genieId) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      final response = await http.get(
+        Uri.parse('$genieAPI/get-genie-by-id?genieId=$genieId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseBody = json.decode(response.body);
+
+        if (responseBody.containsKey('genie')) {
+          final Map<String, dynamic> genieData = responseBody['genie'];
+          return Genie.fromJson(genieData);
+        } else {
+          throw Exception('Invalid response format');
+        }
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error getting genie by id: $e');
+      return Genie.fromJson({});
+    }
+  }
 }

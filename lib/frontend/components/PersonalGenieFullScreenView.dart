@@ -8,7 +8,7 @@ import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class GenieFullScreenView extends StatefulWidget {
+class PersonalGenieFullScreenView extends StatefulWidget {
   final Genie genie;
   final EurekaUser user;
   final GenieHelper genieHelper;
@@ -28,7 +28,7 @@ class GenieFullScreenView extends StatefulWidget {
   final Future<List<String>> genieImagesFuture;
   final Future<List<String>> genieFilesFuture;
 
-  const GenieFullScreenView({
+  const PersonalGenieFullScreenView({
     required this.genie,
     required this.user,
     required this.genieHelper,
@@ -45,10 +45,12 @@ class GenieFullScreenView extends StatefulWidget {
   });
 
   @override
-  State<GenieFullScreenView> createState() => _GenieFullScreenViewState();
+  State<PersonalGenieFullScreenView> createState() =>
+      _PersonalGenieFullScreenViewState();
 }
 
-class _GenieFullScreenViewState extends State<GenieFullScreenView> {
+class _PersonalGenieFullScreenViewState
+    extends State<PersonalGenieFullScreenView> {
   final TextEditingController _commentController = TextEditingController();
 
   @override
@@ -224,16 +226,18 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
                         ),
                         ActionButton(
                           icon: CupertinoIcons.bookmark,
+                          isActive: widget.isLiked,
                           isBookmark: widget.isSaved,
                           onPressed: widget.onSavePressed,
                         ),
-                        _buildCollaborateButton(),
                         ActionButton(
                           icon: CupertinoIcons.chat_bubble,
+                          isActive: Future.value(false),
                           onPressed: _showCommentDialog,
                         ),
                         ActionButton(
                           icon: CupertinoIcons.share,
+                          isActive: Future.value(false),
                           onPressed: () {},
                         ),
                       ],
@@ -252,19 +256,8 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
     return Container(
       height: 40,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue, Colors.blue.shade700],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.grey.withOpacity(0.3),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blue.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
@@ -278,20 +271,20 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
             vertical: 0,
           ),
         ),
-        onPressed: () {},
+        onPressed: null,
         child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               CupertinoIcons.person_2_fill,
               size: 16,
-              color: Colors.white,
+              color: Colors.grey,
             ),
             SizedBox(width: 6),
             Text(
               'Collaborate',
               style: TextStyle(
-                color: Colors.white,
+                color: Colors.grey,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 fontFamily: 'Roboto',
