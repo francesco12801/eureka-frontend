@@ -3,8 +3,8 @@ import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
 import 'package:eureka_final_version/frontend/components/my_elevated_button.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/constants/routes.dart';
-import 'package:eureka_final_version/frontend/models/genie.dart';
-import 'package:eureka_final_version/frontend/models/user.dart';
+import 'package:eureka_final_version/frontend/models/constant/genie.dart';
+import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 

@@ -1,4 +1,4 @@
-import 'package:eureka_final_version/frontend/models/user.dart';
+import 'package:eureka_final_version/frontend/models/constant/user.dart';
 
 class SignUpResponse {
   final bool success;

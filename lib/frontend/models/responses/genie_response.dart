@@ -1,4 +1,4 @@
-import 'package:eureka_final_version/frontend/models/genie.dart';
+import 'package:eureka_final_version/frontend/models/constant/genie.dart';
 
 class GenieResponse {
   final bool success;

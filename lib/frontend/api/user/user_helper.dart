@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:eureka_final_version/frontend/models/constant/notification.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -10,6 +11,8 @@ class UserHelper {
   static final String genieApiUser = dotenv.env['SPRING_API_USER'] ?? '';
   static final String editProfile = dotenv.env['SPRING_API_EDIT_PROFILE'] ?? '';
   static final String userApiProfile = dotenv.env['SPRING_API_USER'] ?? '';
+  static final String notificationApi =
+      dotenv.env['NOTIFICATION_API_URL'] ?? '';
 
   // Instance of FlutterSecureStorage
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
@@ -314,6 +317,27 @@ class UserHelper {
       );
 
       if (response.statusCode != 200) {
+        final userId = await getCurrentUserId();
+        NotificationEureka followerNotification = NotificationEureka(
+          userId: userId,
+          title: 'Friend Request',
+          body: 'You have a new friend request from $userId',
+          type: 'friendRequest',
+        );
+        // send notification to the backend and save it in the database
+        final response = await http.post(
+          Uri.parse('$notificationApi/save-notification'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: json.encode(followerNotification.toJson()),
+        );
+        if (response.statusCode == 200) {
+          // send notification to the user
+          return true;
+        }
+      } else {
         return false;
       }
     } catch (e) {

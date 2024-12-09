@@ -1,8 +1,7 @@
 import 'package:eureka_final_version/firebase_options.dart';
-import 'package:eureka_final_version/frontend/api/notification/firebase_manager.dart';
-import 'package:eureka_final_version/frontend/models/genie.dart';
-import 'package:eureka_final_version/frontend/models/profile_preview.dart';
-import 'package:eureka_final_version/frontend/models/user.dart';
+import 'package:eureka_final_version/frontend/models/constant/genie.dart';
+import 'package:eureka_final_version/frontend/models/constant/profile_preview.dart';
+import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:eureka_final_version/frontend/views/AcceptTerms.dart';
 import 'package:eureka_final_version/frontend/views/EditProfile.dart';
 import 'package:eureka_final_version/frontend/views/EurekaPage.dart';

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:eureka_final_version/frontend/models/genie.dart';
+import 'package:eureka_final_version/frontend/models/constant/genie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';

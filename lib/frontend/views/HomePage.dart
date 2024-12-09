@@ -1,9 +1,9 @@
 import 'package:eureka_final_version/frontend/api/auth/auth_api.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/constants/routes.dart';
-import 'package:eureka_final_version/frontend/models/post.dart';
+import 'package:eureka_final_version/frontend/models/constant/post.dart';
 import 'package:eureka_final_version/frontend/components/my_navigation_bar.dart';
-import 'package:eureka_final_version/frontend/models/user.dart';
+import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:eureka_final_version/frontend/views/LoginPage.dart';
 import 'package:eureka_final_version/frontend/views/SearchPage.dart';
 import 'package:eureka_final_version/frontend/api/navigation_helper.dart';

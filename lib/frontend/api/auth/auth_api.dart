@@ -1,12 +1,11 @@
 import 'package:eureka_final_version/frontend/api/notification/firebase_manager.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
-import 'package:eureka_final_version/frontend/models/login_response.dart';
-import 'package:eureka_final_version/frontend/models/logout_response.dart';
-import 'package:eureka_final_version/frontend/models/signup_response.dart';
-import 'package:eureka_final_version/frontend/models/user.dart';
+import 'package:eureka_final_version/frontend/models/responses/login_response.dart';
+import 'package:eureka_final_version/frontend/models/responses/logout_response.dart';
+import 'package:eureka_final_version/frontend/models/responses/signup_response.dart';
+import 'package:eureka_final_version/frontend/models/constant/user.dart';
 
 import 'package:http/http.dart' as http;
 
@@ -116,8 +115,6 @@ class AuthHelper {
         // get uid from the response
 
         final String uid = userData.uid;
-
-        debugPrint('UID oooooooooooo i am here : $uid');
 
         // Initialize the notification manager
         await FirebaseNotificationManager().initNotification(uid);

@@ -1,9 +1,10 @@
 import 'dart:ui';
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
 import 'package:eureka_final_version/frontend/components/CommentCard.dart';
+import 'package:eureka_final_version/frontend/components/my_action_button.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
-import 'package:eureka_final_version/frontend/models/genie.dart';
-import 'package:eureka_final_version/frontend/models/user.dart';
+import 'package:eureka_final_version/frontend/models/constant/genie.dart';
+import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -216,28 +217,26 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildActionButton(
+                        ActionButton(
                           icon: CupertinoIcons.heart,
-                          count: widget.likesCount,
                           isActive: widget.isLiked,
                           onPressed: widget.onLikePressed,
                         ),
-                        _buildActionButton(
-                          icon: CupertinoIcons.chat_bubble,
-                          count: widget.genie.comments,
-                          onPressed: _showCommentDialog,
+                        ActionButton(
+                          icon: CupertinoIcons.bookmark,
+                          isActive: widget.isSaved,
+                          isBookmark: widget.isSaved,
+                          onPressed: widget.onSavePressed,
                         ),
                         _buildCollaborateButton(),
-                        _buildActionButton(
-                          icon: CupertinoIcons.bookmark,
-                          count: widget.savedCount,
-                          isActive: widget.isSaved,
-                          onPressed: widget.onSavePressed,
-                          isBookmark: true,
+                        ActionButton(
+                          icon: CupertinoIcons.chat_bubble,
+                          isActive: Future.value(false),
+                          onPressed: _showCommentDialog,
                         ),
-                        _buildActionButton(
+                        ActionButton(
                           icon: CupertinoIcons.share,
-                          count: 0,
+                          isActive: Future.value(false),
                           onPressed: () {},
                         ),
                       ],
@@ -604,87 +603,6 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
         }
         return const SizedBox();
       },
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-    int count = 0,
-    Future<bool>? isActive,
-    bool isBookmark = false,
-  }) {
-    // Definisci le coppie di icone (normale/filled)
-    IconData getIcon(IconData defaultIcon, bool active) {
-      switch (defaultIcon) {
-        case CupertinoIcons.heart:
-          return active ? CupertinoIcons.heart_fill : CupertinoIcons.heart;
-        case CupertinoIcons.chat_bubble:
-          return active
-              ? CupertinoIcons.chat_bubble_fill
-              : CupertinoIcons.chat_bubble;
-        case CupertinoIcons.bookmark:
-          return active
-              ? CupertinoIcons.bookmark_fill
-              : CupertinoIcons.bookmark;
-        case CupertinoIcons.share:
-          return CupertinoIcons.share;
-        default:
-          return defaultIcon;
-      }
-    }
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          constraints: const BoxConstraints(maxHeight: 70),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (isActive != null)
-                FutureBuilder<bool>(
-                  future: isActive,
-                  builder: (context, snapshot) {
-                    final bool active = snapshot.data ?? false;
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      child: Icon(
-                        getIcon(icon, active),
-                        color: active
-                            ? (isBookmark ? Colors.yellow : Colors.red)
-                            : Colors.white,
-                        size: 24,
-                      ),
-                    );
-                  },
-                )
-              else
-                Icon(icon, color: Colors.white, size: 24),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  count.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

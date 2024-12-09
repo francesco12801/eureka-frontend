@@ -1,5 +1,5 @@
-import 'package:eureka_final_version/frontend/models/genie.dart';
-import 'package:eureka_final_version/frontend/models/user.dart';
+import 'package:eureka_final_version/frontend/models/constant/genie.dart';
+import 'package:eureka_final_version/frontend/models/constant/user.dart';
 
 class SearchResult {
   final bool success;

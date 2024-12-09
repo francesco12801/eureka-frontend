@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:eureka_final_version/frontend/models/genie_response.dart';
+import 'package:eureka_final_version/frontend/models/responses/genie_response.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-import 'package:eureka_final_version/frontend/models/genie.dart';
+import 'package:eureka_final_version/frontend/models/constant/genie.dart';
 
 class GenieHelper {
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();

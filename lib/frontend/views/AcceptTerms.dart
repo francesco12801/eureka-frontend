@@ -1,7 +1,7 @@
 import 'package:eureka_final_version/frontend/components/accept_term_card.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
-import 'package:eureka_final_version/frontend/models/genie.dart';
-import 'package:eureka_final_version/frontend/models/user.dart';
+import 'package:eureka_final_version/frontend/models/constant/genie.dart';
+import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:flutter/material.dart';
 
 class AcceptTermsPage extends StatefulWidget {

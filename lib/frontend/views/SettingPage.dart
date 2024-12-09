@@ -3,7 +3,7 @@ import 'package:eureka_final_version/frontend/components/my_elevated_button.dart
 import 'package:eureka_final_version/frontend/components/my_motivational_quotes.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/constants/routes.dart';
-import 'package:eureka_final_version/frontend/models/user.dart';
+import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:flutter/material.dart';
 
 class SettingPage extends StatefulWidget {
