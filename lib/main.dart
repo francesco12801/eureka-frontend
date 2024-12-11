@@ -1,5 +1,4 @@
 import 'package:eureka_final_version/firebase_options.dart';
-import 'package:eureka_final_version/frontend/components/GeniePublicFullView.dart';
 import 'package:eureka_final_version/frontend/models/constant/genie.dart';
 import 'package:eureka_final_version/frontend/models/constant/profile_preview.dart';
 import 'package:eureka_final_version/frontend/models/constant/user.dart';

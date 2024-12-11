@@ -158,30 +158,42 @@ class _PersonalGenieFullScreenViewState
                               ],
                             ),
                             const SizedBox(height: 16),
-                            const CommentCard(
+                            CommentCard(
                               authorName: "Francesco Tinessa",
                               authorTitle: "Software Engineer",
                               comment: "Good job, I love your idea!",
                               timeAgo: "2h",
                               profileImageUrl: null,
+                              onLike: () {},
+                              onReply: (String replyText) {
+                                print('Nuova risposta: $replyText');
+                              },
                             ),
                             const SizedBox(height: 12),
-                            const CommentCard(
+                            CommentCard(
                               authorName: "Marco Rossi",
                               authorTitle: "UX Designer",
                               comment:
                                   "This is exactly what I was looking for. Great work on the implementation!",
                               timeAgo: "5h",
                               profileImageUrl: null,
+                              onLike: () {},
+                              onReply: (String replyText) {
+                                print('Nuova risposta: $replyText');
+                              },
                             ),
                             const SizedBox(height: 10),
-                            const CommentCard(
+                            CommentCard(
                               authorName: "Laura Bianchi",
                               authorTitle: "Product Manager",
                               comment:
                                   "Interesting approach. Let's discuss this further in our next meeting.",
                               timeAgo: "1d",
                               profileImageUrl: null,
+                              onLike: () {},
+                              onReply: (String replyText) {
+                                print('Nuova risposta: $replyText');
+                              },
                             ),
                           ],
                         ),
