@@ -116,22 +116,22 @@ class _NotificationPageState extends State<NotificationPage> {
 
       case 'like_notification':
         // Same handling for other types of notifications...
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return Center(
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const CircularProgressIndicator(),
-              ),
-            );
-          },
-        );
+        // showDialog(
+        //   context: context,
+        //   barrierDismissible: false,
+        //   builder: (BuildContext context) {
+        //     return Center(
+        //       child: Container(
+        //         padding: const EdgeInsets.all(20),
+        //         decoration: BoxDecoration(
+        //           color: cardColor,
+        //           borderRadius: BorderRadius.circular(10),
+        //         ),
+        //         child: const CircularProgressIndicator(),
+        //       ),
+        //     );
+        //   },
+        // );
 
         break;
 
@@ -199,6 +199,16 @@ class _NotificationPageState extends State<NotificationPage> {
                   profileRoute,
                   arguments: notification.fromUserId,
                 );
+              },
+            ),
+          if (notification.type == 'COMMENT_REPLY')
+            ListTile(
+              leading: const Icon(Icons.comment, color: Colors.white),
+              title: const Text('View Comment',
+                  style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                // Handle comment reply notification
               },
             ),
           ListTile(

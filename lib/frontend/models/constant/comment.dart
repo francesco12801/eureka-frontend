@@ -1,3 +1,5 @@
+import 'package:eureka_final_version/frontend/models/constant/reply.dart';
+
 class CommentEureka {
   final String id;
   final String genieId;
@@ -8,6 +10,7 @@ class CommentEureka {
   final String content;
   final int createdAt;
   final String? authorProfileImage;
+  List<ReplyComment>? replies;
 
   CommentEureka({
     required this.id,

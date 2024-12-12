@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:eureka_final_version/frontend/api/comment/comment_manager.dart';
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
@@ -82,13 +83,23 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
     setState(() {
       _isLoadingComments = true;
     });
-
     try {
       final comments = await _commentService.getGenieComments(widget.genie.id!);
+
+      for (var comment in comments) {
+        final replies = await _commentService.getCommentReplies(
+          widget.genie.id!,
+          comment.id,
+        );
+        debugPrint('Replies for comment ${comment.id}: $replies');
+        comment.replies = replies;
+      }
+
       setState(() {
         _comments = comments;
       });
     } catch (e) {
+      debugPrint('Error loading comments and replies: $e');
     } finally {
       setState(() {
         _isLoadingComments = false;
@@ -128,12 +139,10 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
       body: SafeArea(
         child: Column(
           children: [
-            // Contenuto Scrollabile
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    // Card Principale
                     Hero(
                       tag: 'genie-card-${widget.genie.id}',
                       child: Container(
@@ -143,28 +152,29 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
                           color: cardColor,
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildHeader(),
-                            Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildUserInfo(),
-                                  const SizedBox(height: 16),
-                                  _buildContent(),
-                                  const SizedBox(height: 16),
-                                  _buildMediaSection(),
-                                ],
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildHeader(),
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildUserInfo(),
+                                    const SizedBox(height: 16),
+                                    _buildContent(),
+                                    const SizedBox(height: 16),
+                                    _buildMediaSection(),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                    // Card Commenti
                     Container(
                       margin: const EdgeInsets.fromLTRB(13, 5, 13, 80),
                       decoration: BoxDecoration(
@@ -289,6 +299,7 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
                                                       const EdgeInsets.only(
                                                           bottom: 10),
                                                   child: CommentCard(
+                                                    authorId: comment.authorId,
                                                     authorName:
                                                         comment.authorName,
                                                     authorTitle: comment
@@ -299,13 +310,105 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
                                                             comment.createdAt),
                                                     profileImageUrl: comment
                                                         .authorProfileImage,
+                                                    replies: comment.replies,
+                                                    currentUserId:
+                                                        widget.user.uid,
+                                                    commentId: comment.id,
                                                     onLike: () {},
-                                                    onReply:
-                                                        (String replyText) {},
+                                                    onDelete: () async {
+                                                      try {
+                                                        await _commentService
+                                                            .deleteComment(
+                                                                comment.id,
+                                                                widget
+                                                                    .genie.id!);
+
+                                                        setState(() {
+                                                          _comments.removeWhere(
+                                                              (c) =>
+                                                                  c.id ==
+                                                                  comment.id);
+                                                        });
+
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text(
+                                                                'Comment deleted successfully'),
+                                                            backgroundColor:
+                                                                Colors.green,
+                                                          ),
+                                                        );
+                                                      } catch (e) {
+                                                        // Gestisce eventuali errori
+                                                        String errorMessage =
+                                                            'Error deleting comment';
+                                                        if (e
+                                                            is HttpException) {
+                                                          if (e.message
+                                                              .contains(
+                                                                  '404')) {
+                                                            errorMessage =
+                                                                'Comment not found';
+                                                          } else if (e.message
+                                                              .contains(
+                                                                  '401')) {
+                                                            errorMessage =
+                                                                'Unauthorized to delete this comment';
+                                                          }
+                                                        }
+
+                                                        if (mounted) {
+                                                          ScaffoldMessenger.of(
+                                                                  context)
+                                                              .showSnackBar(
+                                                            SnackBar(
+                                                              content: Text(
+                                                                  errorMessage),
+                                                              backgroundColor:
+                                                                  Colors.red,
+                                                            ),
+                                                          );
+                                                        }
+                                                        debugPrint(
+                                                            'Error deleting comment: $e');
+                                                      }
+                                                    },
+                                                    onReply: (String replyText,
+                                                        String replyTo) async {
+                                                      try {
+                                                        final newReply =
+                                                            await _commentService
+                                                                .createReply(
+                                                          comment.id,
+                                                          replyText,
+                                                          replyTo,
+                                                        );
+                                                        setState(() {
+                                                          if (comment.replies ==
+                                                              null) {
+                                                            comment.replies =
+                                                                [];
+                                                          }
+                                                          comment.replies!
+                                                              .add(newReply);
+                                                        });
+                                                      } catch (e) {
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text(
+                                                                'Failed to reply. Please try again later.'),
+                                                          ),
+                                                        );
+                                                      }
+                                                    },
                                                   ),
                                                 ))
                                             .toList(),
-                                      ),
+                                      )
                           ],
                         ),
                       ),
@@ -314,7 +417,6 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
                 ),
               ),
             ),
-
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
               decoration: BoxDecoration(
@@ -344,12 +446,12 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
                       children: [
                         ActionButton(
                           icon: CupertinoIcons.heart,
-                          isActive: widget.isLiked,
+                          isLiked: widget.isLiked,
                           onPressed: widget.onLikePressed,
                         ),
                         ActionButton(
                           icon: CupertinoIcons.bookmark,
-                          isBookmark: widget.isSaved,
+                          isSaved: widget.isSaved,
                           onPressed: widget.onSavePressed,
                         ),
                         _buildCollaborateButton(),
