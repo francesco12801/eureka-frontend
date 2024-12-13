@@ -1,12 +1,12 @@
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:eureka_final_version/frontend/api/URLs/urls.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
 class FirebaseNotificationManager {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  static final String urlSpring = dotenv.env['SPRING_API_USER'] ?? '';
+  static final String userURL = UrlManager.getUserURL();
 
   Future<void> initNotification(String uid) async {
     // Request permission
@@ -36,7 +36,7 @@ class FirebaseNotificationManager {
         debugPrint("Saving token to the backend");
 
         final response = await http.post(
-          Uri.parse('$urlSpring/save-token'),
+          Uri.parse('$userURL/save-token'),
           headers: {"Content-Type": "application/json"},
           body: json.encode({"uid": uid, "fcmToken": fcmToken}),
         );

@@ -3,6 +3,7 @@ import 'package:eureka_final_version/frontend/components/my_elevated_button.dart
 import 'package:eureka_final_version/frontend/components/my_icons.dart';
 import 'package:eureka_final_version/frontend/components/my_input_button.dart';
 import 'package:eureka_final_version/frontend/components/my_motivational_quotes.dart';
+import 'package:eureka_final_version/frontend/components/my_popup.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/components/my_text_button.dart';
 import 'package:eureka_final_version/frontend/views/HomePage.dart';
@@ -67,25 +68,21 @@ class _LoginPageState extends State<LoginPage> {
           currentContext,
           MaterialPageRoute(
             builder: (context) => HomePage(
-              userData: LoginResponse.user!, // Pass the user data to home page
+              userData: LoginResponse.user!,
             ),
           ),
         );
       } else if (currentContext.mounted) {
-        ScaffoldMessenger.of(currentContext).showSnackBar(
-          const SnackBar(
-            content: Text('Login failed, please try again.'),
-            duration: Duration(seconds: 3),
-          ),
+        ModernAlert.show(
+          isSuccess: false,
+          message: 'Email or Password is incorrect',
         );
       }
     }).catchError((error) {
       if (currentContext.mounted) {
-        ScaffoldMessenger.of(currentContext).showSnackBar(
-          SnackBar(
-            content: Text('Error occurred: ${error.toString()}'),
-            duration: const Duration(seconds: 3),
-          ),
+        ModernAlert.show(
+          isSuccess: false,
+          message: 'Email or Password is incorrect',
         );
       }
     });

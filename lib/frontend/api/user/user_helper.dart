@@ -1,22 +1,16 @@
 import 'dart:convert';
-import 'dart:developer';
-import 'package:eureka_final_version/frontend/models/constant/notification.dart';
+import 'package:eureka_final_version/frontend/api/URLs/urls.dart';
 import 'package:eureka_final_version/frontend/models/constant/profile_preview.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 
 class UserHelper {
   // URLs for the spring server and node server
-  static final String genieApiUser = dotenv.env['SPRING_API_USER'] ?? '';
-  static final String editProfile = dotenv.env['SPRING_API_EDIT_PROFILE'] ?? '';
-  static final String userApiProfile = dotenv.env['SPRING_API_USER'] ?? '';
-  static final String notificationApi =
-      dotenv.env['NOTIFICATION_API_URL'] ?? '';
-
+  static final String userURL = UrlManager.getUserURL();
+  static final String editProfileURL = UrlManager.getModifyURL();
+  static final String notificationURL = UrlManager.getNotifyURL();
   // Instance of FlutterSecureStorage
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
@@ -24,7 +18,7 @@ class UserHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.post(
-        Uri.parse('$userApiProfile/get-followers'),
+        Uri.parse('$userURL/get-followers'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -57,7 +51,7 @@ class UserHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.post(
-        Uri.parse('$genieApiUser/get-current-user-id'),
+        Uri.parse('$userURL/get-current-user-id'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -81,7 +75,7 @@ class UserHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.post(
-        Uri.parse('$userApiProfile/get-followings'),
+        Uri.parse('$userURL/get-followings'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -110,7 +104,7 @@ class UserHelper {
   Future<String?> getPublicProfileImage(String uid) async {
     final token = await _secureStorage.read(key: 'auth_token');
     final response = await http.post(
-      Uri.parse('$userApiProfile/get-public-profile-image'),
+      Uri.parse('$userURL/get-public-profile-image'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -129,7 +123,7 @@ class UserHelper {
   Future<String?> getPublicBannerImage(String uid) async {
     final token = await _secureStorage.read(key: 'auth_token');
     final response = await http.post(
-      Uri.parse('$userApiProfile/get-public-banner-image'),
+      Uri.parse('$userURL/get-public-banner-image'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -150,7 +144,7 @@ class UserHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.post(
-        Uri.parse('$userApiProfile/get-user'),
+        Uri.parse('$userURL/get-user'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',
@@ -177,7 +171,7 @@ class UserHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response =
-          await http.post(Uri.parse('$genieApiUser/getProfileImage'), headers: {
+          await http.post(Uri.parse('$userURL/getProfileImage'), headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       });
@@ -199,8 +193,7 @@ class UserHelper {
     // Make a get request to the spring server to get profile name of the user
     try {
       final token = await _secureStorage.read(key: 'auth_token');
-      final response = await http.post(
-          Uri.parse('$genieApiUser/getBannerImage'),
+      final response = await http.post(Uri.parse('$userURL/getBannerImage'),
           headers: {'Authorization': 'Bearer $token'});
 
       final Map<String, dynamic> imageResponse = json.decode(response.body);
@@ -221,7 +214,7 @@ class UserHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.post(
-        Uri.parse('$userApiProfile/get-follower-count'),
+        Uri.parse('$userURL/get-follower-count'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',
@@ -247,8 +240,8 @@ class UserHelper {
   Future<int> getFollowingCount() async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
-      final response = await http
-          .post(Uri.parse('$userApiProfile/get-following-count'), headers: {
+      final response =
+          await http.post(Uri.parse('$userURL/get-following-count'), headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json; charset=UTF-8',
       });
@@ -270,7 +263,7 @@ class UserHelper {
   Future<String> getEmail() async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
-      final response = await http.post(Uri.parse('$genieApiUser/get-email'),
+      final response = await http.post(Uri.parse('$userURL/get-email'),
           headers: {'Authorization': 'Bearer $token'});
 
       final Map<String, dynamic> emailResponse = json.decode(response.body);
@@ -290,7 +283,7 @@ class UserHelper {
   Future<String> getAddress() async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
-      final response = await http.post(Uri.parse('$genieApiUser/get-address'),
+      final response = await http.post(Uri.parse('$userURL/get-address'),
           headers: {'Authorization': 'Bearer $token'});
 
       final Map<String, dynamic> addressResponse = json.decode(response.body);
@@ -312,7 +305,7 @@ class UserHelper {
       final token = await _secureStorage.read(key: 'auth_token');
       debugPrint('friendId: $friendId');
       final response = await http.post(
-        Uri.parse('$genieApiUser/friend-request?friendId=$friendId'),
+        Uri.parse('$userURL/friend-request?friendId=$friendId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -335,7 +328,7 @@ class UserHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.post(
-        Uri.parse('$genieApiUser/remove-friend?friendId=$friendId'),
+        Uri.parse('$userURL/remove-friend?friendId=$friendId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -355,7 +348,7 @@ class UserHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.get(
-        Uri.parse('$genieApiUser/is-already-friend?uid=$uid'),
+        Uri.parse('$userURL/is-already-friend?uid=$uid'),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -378,7 +371,7 @@ class UserHelper {
       final token = await _secureStorage.read(key: 'auth_token');
 
       final request = http.MultipartRequest(
-          'POST', Uri.parse('$editProfile/changeProfileImage'));
+          'POST', Uri.parse('$editProfileURL/changeProfileImage'));
       request.headers['Authorization'] = 'Bearer $token';
       request.headers['Content-Type'] = 'multipart/form-data';
       if (imageProfile != null) {
@@ -411,7 +404,7 @@ class UserHelper {
       final token = await _secureStorage.read(key: 'auth_token');
 
       final request = http.MultipartRequest(
-          'POST', Uri.parse('$editProfile/changeBannerImage'));
+          'POST', Uri.parse('$editProfileURL/changeBannerImage'));
       request.headers.addAll({
         'Authorization': 'Bearer $token',
         'Content-Type': 'multipart/form-data',
@@ -445,8 +438,8 @@ class UserHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       // Create a multipart request
-      var request =
-          http.MultipartRequest('POST', Uri.parse('$editProfile/uploadImages'));
+      var request = http.MultipartRequest(
+          'POST', Uri.parse('$editProfileURL/uploadImages'));
 
       request.headers['Authorization'] = 'Bearer $token';
       request.headers['Content-Type'] = 'multipart/form-data';
@@ -494,7 +487,7 @@ class UserHelper {
       final token = await _secureStorage.read(key: 'auth_token');
 
       final response = await http.post(
-        Uri.parse('$userApiProfile/get-public-profile'),
+        Uri.parse('$userURL/get-public-profile'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

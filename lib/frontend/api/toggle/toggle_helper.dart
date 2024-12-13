@@ -1,22 +1,22 @@
 import 'dart:convert';
 
+import 'package:eureka_final_version/frontend/api/URLs/urls.dart';
 import 'package:eureka_final_version/frontend/models/constant/genie.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class ToggleHelper {
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
-  static final String toggleAPI = dotenv.env['TOGGLE_API_URL'] ?? '';
+  static final String toggleURL = UrlManager.getToggleURL();
 
   Future<bool> isLiked(Genie genieData) async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
 
       final response = await http.get(
-        Uri.parse('$toggleAPI/like-check?genieId=${genieData.id}'),
+        Uri.parse('$toggleURL/like-check?genieId=${genieData.id}'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
@@ -44,7 +44,7 @@ class ToggleHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.get(
-        Uri.parse('$toggleAPI/save-check?genieId=${genieData.id}'),
+        Uri.parse('$toggleURL/save-check?genieId=${genieData.id}'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
@@ -74,7 +74,7 @@ class ToggleHelper {
     final token = await _secureStorage.read(key: 'auth_token');
     try {
       final response = await http.post(
-        Uri.parse('$toggleAPI/bookmark'),
+        Uri.parse('$toggleURL/bookmark'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
@@ -100,7 +100,7 @@ class ToggleHelper {
     debugPrint("geniedId: $genieId, control: $control");
     try {
       final response = await http.post(
-        Uri.parse('$toggleAPI/like'),
+        Uri.parse('$toggleURL/like'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           "Authorization": "Bearer $token",

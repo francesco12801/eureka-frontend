@@ -1,9 +1,11 @@
 import 'package:eureka_final_version/frontend/api/auth/auth_api.dart';
+import 'package:eureka_final_version/frontend/api/collaborate/collaborate_manager.dart';
 import 'package:eureka_final_version/frontend/api/navigation_helper.dart';
 import 'package:eureka_final_version/frontend/api/notification/notify_manager.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
 import 'package:eureka_final_version/frontend/components/NotificationGroup.dart';
 import 'package:eureka_final_version/frontend/components/my_navigation_bar.dart';
+import 'package:eureka_final_version/frontend/components/my_popup.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/components/my_tab_bar.dart';
 import 'package:eureka_final_version/frontend/constants/routes.dart';
@@ -31,6 +33,7 @@ class _NotificationPageState extends State<NotificationPage> {
   List<NotificationEureka> notifications = [];
   List<NotificationEureka> filteredNotifications = [];
   Map<String, List<NotificationEureka>> _groupedNotifications = {};
+  final CollaborateService collaborateService = CollaborateService();
 
   @override
   void initState() {
@@ -70,7 +73,7 @@ class _NotificationPageState extends State<NotificationPage> {
     }
 
     switch (notification.type) {
-      case 'friend_request':
+      case 'FOLLOW':
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -114,29 +117,11 @@ class _NotificationPageState extends State<NotificationPage> {
         }
         break;
 
-      case 'like_notification':
-        // Same handling for other types of notifications...
-        // showDialog(
-        //   context: context,
-        //   barrierDismissible: false,
-        //   builder: (BuildContext context) {
-        //     return Center(
-        //       child: Container(
-        //         padding: const EdgeInsets.all(20),
-        //         decoration: BoxDecoration(
-        //           color: cardColor,
-        //           borderRadius: BorderRadius.circular(10),
-        //         ),
-        //         child: const CircularProgressIndicator(),
-        //       ),
-        //     );
-        //   },
-        // );
-
+      case 'LIKE':
         break;
-
-      case 'save_notification':
-        // Same handling for other types of notifications...
+      case 'BOOKMARK':
+        break;
+      case 'COLLAB':
         break;
     }
   }
@@ -378,7 +363,10 @@ class _NotificationPageState extends State<NotificationPage> {
           break;
         case 1: // Collab
           filteredNotifications = notifications
-              .where((notification) => notification.type == 'collab')
+              .where((notification) =>
+                  notification.type == 'COLLABORATION_REQUEST' ||
+                  notification.type == 'COLLAB_ACCEPTED' ||
+                  notification.type == 'COLLAB_DECLINED')
               .toList();
           break;
         case 2: // Unread
@@ -542,6 +530,217 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 
   Widget _buildNotificationTile(NotificationEureka notification) {
+    if (notification.type == 'COLLABORATION_REQUEST') {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.blue.withOpacity(0.3),
+            width: 2,
+          ),
+        ),
+        child: Column(
+          children: [
+            // Header della notifica
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.white.withOpacity(0.1),
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: !notification.read
+                          ? Border.all(color: Colors.blue.shade400, width: 2)
+                          : null,
+                    ),
+                    child: FutureBuilder<String?>(
+                      future: widget.userHelper
+                          .getPublicProfileImage(notification.fromUserId),
+                      builder: (context, snapshot) {
+                        return CircleAvatar(
+                          radius: 30,
+                          backgroundImage: snapshot.hasData
+                              ? NetworkImage(snapshot.data!)
+                              : null,
+                          backgroundColor: Colors.grey.withOpacity(0.5),
+                          child: !snapshot.hasData
+                              ? const Icon(Icons.person, color: Colors.white)
+                              : null,
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                notification.title,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    CupertinoIcons.person_2_fill,
+                                    color: Colors.blue,
+                                    size: 14,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Collaboration',
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          notification.body,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _formatTimestamp(notification.createdAt),
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.5),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Pulsanti di azione
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green.withOpacity(0.2),
+                        foregroundColor: Colors.green,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () {
+                        _onPressedAccept(notification.collaborationId!);
+                      },
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(CupertinoIcons.check_mark),
+                          SizedBox(width: 8),
+                          Text('Accept'),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.withOpacity(0.2),
+                        foregroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () {},
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(CupertinoIcons.xmark),
+                          SizedBox(width: 8),
+                          Text('Decline'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue, Colors.blue.shade700],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () {},
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(CupertinoIcons.video_camera_solid,
+                          color: Colors.white),
+                      SizedBox(width: 8),
+                      Text(
+                        'Schedule Video Call',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Dismissible(
       key: ValueKey(
           '${notification.id}_${notification.read}_${notification.createdAt}'),
@@ -651,6 +850,16 @@ class _NotificationPageState extends State<NotificationPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _onPressedAccept(String collaborationId) async {
+    try {
+      await collaborateService.acceptCollab(collaborationId);
+      // ModernAlert.show(
+      //     message: "Collaboration accepted successfully!", isSuccess: true);
+    } catch (e) {
+      ModernAlert.show(message: "Error accepting collab: $e", isSuccess: false);
+    }
   }
 
   String _formatTimestamp(int timestamp) {

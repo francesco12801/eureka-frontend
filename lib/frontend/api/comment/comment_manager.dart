@@ -1,25 +1,24 @@
 import 'dart:convert';
+import 'package:eureka_final_version/frontend/api/URLs/urls.dart';
 import 'package:eureka_final_version/frontend/models/constant/comment.dart';
 import 'package:eureka_final_version/frontend/models/constant/reply.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class CommentService {
-  final String? commentEndpoint = dotenv.env['COMMENT_API_URL'];
+  static final String commentURL = UrlManager.getCommentURL();
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   Future<List<CommentEureka>> getGenieComments(String genieId) async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
 
-      final response = await http.get(
-          Uri.parse('$commentEndpoint/get-comments/genie/$genieId'),
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'application/json',
-          });
+      final response = await http
+          .get(Uri.parse('$commentURL/get-comments/genie/$genieId'), headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      });
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         final List<dynamic> commentsJson = data['comments'];
@@ -43,7 +42,7 @@ class CommentService {
       debugPrint('genieId from comment creation: $genieId');
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.post(
-        Uri.parse('$commentEndpoint/create-comments/genie/$genieId'),
+        Uri.parse('$commentURL/create-comments/genie/$genieId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',
@@ -79,7 +78,7 @@ class CommentService {
       final token = await _secureStorage.read(key: 'auth_token');
 
       final response = await http.post(
-        Uri.parse('$commentEndpoint/create-reply/comment/$commentId'),
+        Uri.parse('$commentURL/create-reply/comment/$commentId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -108,8 +107,7 @@ class CommentService {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.get(
-        Uri.parse(
-            '$commentEndpoint/comments/$commentId/replies?genieId=$genieId'),
+        Uri.parse('$commentURL/comments/$commentId/replies?genieId=$genieId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -138,7 +136,7 @@ class CommentService {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.delete(
-        Uri.parse('$commentEndpoint/delete-comments/$commentId/genie/$genieId'),
+        Uri.parse('$commentURL/delete-comments/$commentId/genie/$genieId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

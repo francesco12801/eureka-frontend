@@ -308,9 +308,7 @@ class _CommentCardState extends State<CommentCard>
             children: [
               CircleAvatar(
                 radius: 14,
-                backgroundImage: reply.profileImageAuthor != null
-                    ? NetworkImage(reply.profileImageAuthor)
-                    : null,
+                backgroundImage: NetworkImage(reply.profileImageAuthor),
                 backgroundColor: Colors.blue.withOpacity(0.1),
               ),
               const SizedBox(width: 8),
@@ -321,7 +319,7 @@ class _CommentCardState extends State<CommentCard>
                     Row(
                       children: [
                         Text(
-                          reply.authorName ?? '',
+                          reply.authorName,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 13,
@@ -330,7 +328,7 @@ class _CommentCardState extends State<CommentCard>
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          DateConverter.getTimeAgo(reply.createdAt ?? 0),
+                          DateConverter.getTimeAgo(reply.createdAt),
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.5),
                             fontSize: 11,
@@ -338,14 +336,13 @@ class _CommentCardState extends State<CommentCard>
                         ),
                       ],
                     ),
-                    if (reply.authorProfession != null)
-                      Text(
-                        reply.authorProfession!,
-                        style: TextStyle(
-                          color: Colors.blue.shade300,
-                          fontSize: 11,
-                        ),
+                    Text(
+                      reply.authorProfession,
+                      style: TextStyle(
+                        color: Colors.blue.shade300,
+                        fontSize: 11,
                       ),
+                    ),
                   ],
                 ),
               ),
@@ -383,7 +380,7 @@ class _CommentCardState extends State<CommentCard>
                             ),
                             TextButton(
                               onPressed: () {
-                                widget.onDeleteReply?.call(reply.id!);
+                                widget.onDeleteReply?.call(reply.id);
                                 Navigator.pop(context);
                               },
                               child: const Text(

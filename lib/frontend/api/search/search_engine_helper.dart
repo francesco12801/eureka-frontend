@@ -1,12 +1,11 @@
 import 'dart:convert';
-
+import 'package:eureka_final_version/frontend/api/URLs/urls.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class SearchEngineHelper {
-  static final String searchApi = dotenv.env['SEARCH_API_URL'] ?? '';
+  static final String searchURL = UrlManager.getSearchURL();
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   Future<Map<String, dynamic>> search(
@@ -20,7 +19,7 @@ class SearchEngineHelper {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.get(
           Uri.parse(
-              '$searchApi/perform?query=$encodedQuery&type=$encodedType&category=$encodedCategory'),
+              '$searchURL/perform?query=$encodedQuery&type=$encodedType&category=$encodedCategory'),
           headers: {
             'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',
@@ -49,7 +48,7 @@ class SearchEngineHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http
-          .get(Uri.parse('$searchApi/genie-details/$genieId'), headers: {
+          .get(Uri.parse('$searchURL/genie-details/$genieId'), headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       });
@@ -68,7 +67,7 @@ class SearchEngineHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http
-          .get(Uri.parse('$searchApi/genie-details/$userId'), headers: {
+          .get(Uri.parse('$searchURL/genie-details/$userId'), headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       });

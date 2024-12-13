@@ -1,23 +1,22 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:eureka_final_version/frontend/api/URLs/urls.dart';
 import 'package:eureka_final_version/frontend/models/responses/genie_response.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:eureka_final_version/frontend/models/constant/genie.dart';
 
 class GenieHelper {
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-
-  static final String genieAPI = dotenv.env['GENIE_API_URL'] ?? '';
+  static final String genieURL = UrlManager.getGenieURL();
 
   Future<int> getLikesCount(Genie genieData) async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.get(
-        Uri.parse('$genieAPI/get-likes?genieId=${genieData.id}'),
+        Uri.parse('$genieURL/get-likes?genieId=${genieData.id}'),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -42,7 +41,7 @@ class GenieHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.get(
-        Uri.parse('$genieAPI/get-bookmarks?genieId=${genieData.id}'),
+        Uri.parse('$genieURL/get-bookmarks?genieId=${genieData.id}'),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -64,7 +63,7 @@ class GenieHelper {
   }
 
   Future<GenieResponse> createGenie(Genie genieData) async {
-    final url = '$genieAPI/create';
+    final url = '$genieURL/create';
     final token = await _secureStorage.read(key: 'auth_token');
 
     try {
@@ -128,7 +127,7 @@ class GenieHelper {
       // call spring endpoint to get an image passing the id of the genie and token
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.get(
-        Uri.parse('$genieAPI/get-images-from-genie?genieId=${genieData.id}'),
+        Uri.parse('$genieURL/get-images-from-genie?genieId=${genieData.id}'),
         headers: {
           "Authorization": "Bearer $token",
         },
@@ -188,7 +187,7 @@ class GenieHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.post(
-        Uri.parse('$genieAPI/delete'),
+        Uri.parse('$genieURL/delete'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           "Authorization": "Bearer $token",
@@ -211,7 +210,7 @@ class GenieHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.get(
-        Uri.parse('$genieAPI/get-files-from-genie?genieId=${genieData.id}'),
+        Uri.parse('$genieURL/get-files-from-genie?genieId=${genieData.id}'),
         headers: {
           "Authorization": "Bearer $token",
         },
@@ -242,7 +241,7 @@ class GenieHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.get(
-        Uri.parse('$genieAPI/get-from-user'),
+        Uri.parse('$genieURL/get-from-user'),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -273,7 +272,7 @@ class GenieHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.post(
-        Uri.parse('$genieAPI/get-public-user-genies'),
+        Uri.parse('$genieURL/get-public-user-genies'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -304,7 +303,7 @@ class GenieHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.get(
-        Uri.parse('$genieAPI/get-genie-by-id?genieId=$genieId'),
+        Uri.parse('$genieURL/get-genie-by-id?genieId=$genieId'),
         headers: {
           'Authorization': 'Bearer $token',
         },

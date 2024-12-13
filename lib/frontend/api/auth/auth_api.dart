@@ -1,5 +1,5 @@
+import 'package:eureka_final_version/frontend/api/URLs/urls.dart';
 import 'package:eureka_final_version/frontend/api/notification/firebase_manager.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'package:eureka_final_version/frontend/models/responses/login_response.dart';
@@ -10,15 +10,15 @@ import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:http/http.dart' as http;
 
 class AuthHelper {
-  static final String urlSpring = dotenv.env['SPRING_API_AUTH'] ?? '';
-  static final String middleware = dotenv.env['MIDDLEWARE_API_URL'] ?? '';
+  static final String authURL = UrlManager.getAuthURL();
+  static final String middlewareURL = UrlManager.getMiddlewareURL();
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   // Check if the token is valid
   Future<bool> checkToken() async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response =
-          await http.get(Uri.parse('$urlSpring/verify-token'), headers: {
+          await http.get(Uri.parse('$authURL/verify-token'), headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       });
@@ -63,7 +63,7 @@ class AuthHelper {
     try {
       // Call the backend to sign up the user
       final response = await http.post(
-        Uri.parse('$middleware/signup'),
+        Uri.parse('$middlewareURL/signup'),
         headers: {"Content-Type": "application/json"},
         body: json.encode(signupData),
       );
@@ -99,7 +99,7 @@ class AuthHelper {
     try {
       // Call the backend
       final response = await http.post(
-        Uri.parse('$middleware/login'),
+        Uri.parse('$middlewareURL/login'),
         headers: {"Content-Type": "application/json"},
         body: json.encode(signupData),
       );
@@ -141,7 +141,7 @@ class AuthHelper {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
       final response = await http.get(
-        Uri.parse('$urlSpring/logout'),
+        Uri.parse('$authURL/logout'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',

@@ -1,13 +1,13 @@
 import 'dart:convert';
 
+import 'package:eureka_final_version/frontend/api/URLs/urls.dart';
 import 'package:eureka_final_version/frontend/models/constant/notification.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class NotifyManager {
-  static final String notifyApi = dotenv.env['NOTIFICATION_API_URL'] ?? '';
+  static final String notificationURL = UrlManager.getNotifyURL();
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   Future<Map<String, dynamic>> updateFcmToken(String fcmToken) async {
@@ -15,8 +15,8 @@ class NotifyManager {
     Map<String, dynamic> response = {};
     try {
       debugPrint('Updating FCM Token');
-      final response =
-          await http.get(Uri.parse('$notifyApi/updateFcmToken'), headers: {
+      final response = await http
+          .get(Uri.parse('$notificationURL/updateFcmToken'), headers: {
         'Authorization': 'Bearer $fcmToken',
       });
       if (response.statusCode == 200) {
@@ -43,7 +43,7 @@ class NotifyManager {
       debugPrint('Fetching notifications for user $userId');
 
       final response = await http.get(
-        Uri.parse('$notifyApi/user/$userId'),
+        Uri.parse('$notificationURL/user/$userId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -75,7 +75,7 @@ class NotifyManager {
       debugPrint('Marking notification ${notification.id} as read');
 
       final response = await http.put(
-        Uri.parse('$notifyApi/user/$uid/read/${notification.id}'),
+        Uri.parse('$notificationURL/user/$uid/read/${notification.id}'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -109,7 +109,7 @@ class NotifyManager {
       debugPrint('Marking all notifications as read');
 
       final response = await http.put(
-        Uri.parse('$notifyApi/user/$userId//read-all"'),
+        Uri.parse('$notificationURL/user/$userId//read-all"'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -132,7 +132,7 @@ class NotifyManager {
       if (token == null) throw Exception('No token found');
 
       final response = await http.delete(
-        Uri.parse('$notifyApi/user/$userId/$notificationId'),
+        Uri.parse('$notificationURL/user/$userId/$notificationId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

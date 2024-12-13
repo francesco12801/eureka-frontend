@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:eureka_final_version/frontend/api/collaborate/collaborate_manager.dart';
 import 'package:eureka_final_version/frontend/api/comment/comment_manager.dart';
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
 import 'package:eureka_final_version/frontend/components/CommentCard.dart';
 import 'package:eureka_final_version/frontend/components/DateConverter.dart';
 import 'package:eureka_final_version/frontend/components/my_action_button.dart';
+import 'package:eureka_final_version/frontend/components/my_popup.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/models/constant/comment.dart';
 import 'package:eureka_final_version/frontend/models/constant/genie.dart';
@@ -32,7 +34,7 @@ class GenieFullScreenView extends StatefulWidget {
   final Future<List<String>> genieImagesFuture;
   final Future<List<String>> genieFilesFuture;
 
-  const GenieFullScreenView({
+  GenieFullScreenView({
     required this.genie,
     required this.user,
     required this.genieHelper,
@@ -58,13 +60,17 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
   final int maxCharacters = 500;
   List<CommentEureka> _comments = [];
   bool _isLoadingComments = false;
+  bool _hasCollabRequest = false;
+  bool _isLoadingCollab = false;
 
   final CommentService _commentService = CommentService();
+  final CollaborateService _collaborateService = CollaborateService();
 
   @override
   void initState() {
     super.initState();
     _loadComments();
+    _checkCollabRequest();
     _commentController.addListener(() {
       _characterCount.value = _commentController.text.length;
     });
@@ -75,6 +81,24 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
     _commentController.dispose();
     _characterCount.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkCollabRequest() async {
+    try {
+      _isLoadingCollab = true;
+      final hasRequest = await _collaborateService.checkExistingCollab(
+        widget.user.uid,
+        widget.genie.userId!,
+        widget.genie.id!,
+      );
+      setState(() {
+        _hasCollabRequest = hasRequest;
+        _isLoadingCollab = false;
+      });
+    } catch (e) {
+      debugPrint('Error checking collab request: $e');
+      _isLoadingCollab = false;
+    }
   }
 
   Future<void> _loadComments() async {
@@ -319,9 +343,9 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
                                                       try {
                                                         await _commentService
                                                             .deleteComment(
-                                                                comment.id,
-                                                                widget
-                                                                    .genie.id!);
+                                                          widget.genie.id!,
+                                                          comment.id,
+                                                        );
 
                                                         setState(() {
                                                           _comments.removeWhere(
@@ -330,18 +354,9 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
                                                                   comment.id);
                                                         });
 
-                                                        ScaffoldMessenger.of(
-                                                                context)
-                                                            .showSnackBar(
-                                                          const SnackBar(
-                                                            content: Text(
-                                                                'Comment deleted successfully'),
-                                                            backgroundColor:
-                                                                Colors.green,
-                                                          ),
-                                                        );
+                                                        _showSuccessDialog(
+                                                            context);
                                                       } catch (e) {
-                                                        // Gestisce eventuali errori
                                                         String errorMessage =
                                                             'Error deleting comment';
                                                         if (e
@@ -386,11 +401,7 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
                                                           replyTo,
                                                         );
                                                         setState(() {
-                                                          if (comment.replies ==
-                                                              null) {
-                                                            comment.replies =
-                                                                [];
-                                                          }
+                                                          comment.replies = [];
                                                           comment.replies!
                                                               .add(newReply);
                                                         });
@@ -475,22 +486,114 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
     );
   }
 
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        Future.delayed(const Duration(seconds: 2), () {
+          Navigator.of(context).pop(true);
+        });
+
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2C2C2C),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.1),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      CupertinoIcons.checkmark_circle,
+                      color: Colors.green.shade400,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Comment Deleted',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'The comment has been successfully deleted',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildCollaborateButton() {
+    if (_isLoadingCollab) {
+      return Container(
+        height: 40,
+        width: 120,
+        decoration: BoxDecoration(
+          color: Colors.grey.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Container(
       height: 40,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue, Colors.blue.shade700],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: _hasCollabRequest
+            ? LinearGradient(
+                colors: [Colors.grey.shade700, Colors.grey.shade900],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : LinearGradient(
+                colors: [Colors.blue, Colors.blue.shade700],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(
-            color: Colors.blue.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
+          if (!_hasCollabRequest)
+            BoxShadow(
+              color: Colors.blue.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
         ],
       ),
       child: ElevatedButton(
@@ -505,20 +608,26 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
             vertical: 0,
           ),
         ),
-        onPressed: () {},
-        child: const Row(
+        onPressed: _hasCollabRequest ? null : onCollaboratePressed,
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              CupertinoIcons.person_2_fill,
+              _hasCollabRequest
+                  ? CupertinoIcons.clock_fill
+                  : CupertinoIcons.person_2_fill,
               size: 16,
-              color: Colors.white,
+              color: _hasCollabRequest
+                  ? Colors.white.withOpacity(0.5)
+                  : Colors.white,
             ),
-            SizedBox(width: 6),
+            const SizedBox(width: 6),
             Text(
-              'Collaborate',
+              _hasCollabRequest ? 'Pending' : 'Collaborate',
               style: TextStyle(
-                color: Colors.white,
+                color: _hasCollabRequest
+                    ? Colors.white.withOpacity(0.5)
+                    : Colors.white,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 fontFamily: 'Roboto',
@@ -528,6 +637,30 @@ class _GenieFullScreenViewState extends State<GenieFullScreenView> {
         ),
       ),
     );
+  }
+
+  void onCollaboratePressed() async {
+    if (_hasCollabRequest || _isLoadingCollab) return;
+
+    setState(() {
+      _isLoadingCollab = true;
+    });
+
+    try {
+      await _collaborateService.sendCollab(
+        widget.genie.userId!,
+        widget.genie.id!,
+      );
+
+      setState(() {
+        _hasCollabRequest = true;
+        _isLoadingCollab = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingCollab = false;
+      });
+    }
   }
 
   void _showCommentDialog() {

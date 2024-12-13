@@ -6,6 +6,9 @@ class NotificationEureka {
   final String type;
   bool read;
   final int createdAt;
+  final String? genieID;
+  final String? commentID;
+  final String? collaborationId;
 
   NotificationEureka({
     required this.id,
@@ -14,6 +17,9 @@ class NotificationEureka {
     required this.body,
     required this.type,
     this.read = false,
+    this.genieID,
+    this.commentID,
+    this.collaborationId,
     int? createdAt,
   }) : createdAt = createdAt ?? DateTime.now().millisecondsSinceEpoch;
 
@@ -26,6 +32,9 @@ class NotificationEureka {
       type: json['type'],
       read: json['read'] ?? false,
       createdAt: json['createdAt'],
+      collaborationId: json['collaborationId'] ?? '',
+      genieID: json['genieID'] ?? '',
+      commentID: json['commentID'] ?? '',
     );
   }
 
@@ -38,11 +47,14 @@ class NotificationEureka {
       'type': type,
       'read': read,
       'createdAt': createdAt,
+      'collaborationId': collaborationId,
+      'genieID': genieID,
+      'commentID': commentID,
     };
   }
 
   @override
   String toString() {
-    return 'NotificationEureka{id: $id ,fromUserId: $fromUserId, title: $title, body: $body, type: $type, read: $read, createdAt: $createdAt}';
+    return 'NotificationEureka{id: $id ,fromUserId: $fromUserId, title: $title, body: $body, type: $type, read: $read, createdAt: $createdAt, collaborationId: $collaborationId, genieID: $genieID, commentID: $commentID}';
   }
 }
