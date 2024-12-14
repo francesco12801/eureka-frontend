@@ -40,6 +40,7 @@ class CollaborateService {
   Future<void> acceptCollab(String collaborationId) async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
+      debugPrint('Collab id: $collaborationId');
       final Map<String, String> requestBody = {
         'collaborationId': collaborationId
       };
@@ -52,6 +53,7 @@ class CollaborateService {
         body: jsonEncode(requestBody),
       );
       if (response.statusCode == 200) {
+        debugPrint("my response: ${response.body}");
         debugPrint('Collab accepted');
       } else {
         debugPrint('Error accepting collab');
@@ -94,6 +96,32 @@ class CollaborateService {
     } catch (e) {
       debugPrint("Error checking collab: $e");
       return false;
+    }
+  }
+
+  Future<Map<String, dynamic>> getCollaborationClusterizedByGenie() async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      final response = await http.get(
+        Uri.parse('$routeCollab/user-collaborations'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        debugPrint('Collab clusterized by genie: $data');
+        return data;
+      } else {
+        debugPrint(
+            'Error getting collab clusterized by genie: ${response.statusCode}');
+        return {};
+      }
+    } catch (e) {
+      debugPrint("Error getting collab clusterized by genie: $e");
+      return {};
     }
   }
 }

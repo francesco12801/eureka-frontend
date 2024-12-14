@@ -73,17 +73,17 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
       } else if (currentContext.mounted) {
-        ModernAlert.show(
-          isSuccess: false,
-          message: 'Email or Password is incorrect',
-        );
+        // ModernAlert.show(
+        //   isSuccess: false,
+        //   message: 'Email or Password is incorrect',
+        // );
       }
     }).catchError((error) {
       if (currentContext.mounted) {
-        ModernAlert.show(
-          isSuccess: false,
-          message: 'Email or Password is incorrect',
-        );
+        // ModernAlert.show(
+        //   isSuccess: false,
+        //   message: 'Email or Password is incorrect',
+        // );
       }
     });
     return null;

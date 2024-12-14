@@ -166,6 +166,54 @@ class UserHelper {
     }
   }
 
+  Future<String> getNameSurname(String uid) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      final response = await http.get(
+        Uri.parse('$userURL/get-name-surname/$uid'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> nameSurnameResponse =
+            json.decode(response.body);
+        debugPrint('nameSurnameResponse: $nameSurnameResponse');
+        final String nameSurname = nameSurnameResponse['nameSurname'];
+        debugPrint('nameSurname: $nameSurname');
+        return nameSurname;
+      } else {
+        return 'Error fetching name and surname';
+      }
+    } catch (e) {
+      return 'Error fetching name and surname: $e';
+    }
+  }
+
+  Future<String> getProfession(String uid) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      final response = await http.get(
+        Uri.parse('$userURL/get-profession/$uid'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      debugPrint('response: ${response.body}');
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> professionResponse =
+            json.decode(response.body);
+        final String profession = professionResponse['profession'];
+        debugPrint('profession: $profession');
+        return profession;
+      } else {
+        return 'Error fetching profession';
+      }
+    } catch (e) {
+      return 'Error fetching profession: $e';
+    }
+  }
+
   Future<String?> getProfileImage() async {
     // Make a get request to the spring server to get profile image of the user
     try {

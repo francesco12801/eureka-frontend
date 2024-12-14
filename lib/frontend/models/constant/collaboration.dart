@@ -1,3 +1,5 @@
+enum CollaborationStatus { PENDING, ACCEPTED, DECLINED, CANCELLED }
+
 class Collaboration {
   final String id;
   final String senderId;
@@ -6,7 +8,7 @@ class Collaboration {
   final int createdAt;
   final int updatedAt;
   final int expireAt;
-  final String? status;
+  final CollaborationStatus? status;
 
   Collaboration({
     required this.id,
@@ -20,15 +22,29 @@ class Collaboration {
   });
 
   factory Collaboration.fromJson(Map<String, dynamic> json) {
+    CollaborationStatus? status;
+    if (json['status'] is CollaborationStatus) {
+      status = json['status'];
+    } else if (json['status'] is String) {
+      try {
+        status = CollaborationStatus.values.firstWhere(
+          (e) => e.toString() == 'CollaborationStatus.${json['status']}',
+          orElse: () => CollaborationStatus.PENDING,
+        );
+      } catch (e) {
+        status = CollaborationStatus.PENDING;
+      }
+    }
+
     return Collaboration(
       id: json['id'] ?? '',
       senderId: json['senderId'] ?? '',
       receiverId: json['receiverId'] ?? '',
       genieId: json['genieId'] ?? '',
-      createdAt: json['createdAt'],
-      updatedAt: json['updatedAt'],
-      expireAt: json['expireAt'],
-      status: json['status'],
+      createdAt: json['createdAt'] ?? 0,
+      updatedAt: json['updatedAt'] ?? 0,
+      expireAt: json['expireAt'] ?? 0,
+      status: status,
     );
   }
 

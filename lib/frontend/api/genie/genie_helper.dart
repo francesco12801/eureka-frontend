@@ -302,20 +302,29 @@ class GenieHelper {
   Future<Genie> getGenieById(String genieId) async {
     try {
       final token = await _secureStorage.read(key: 'auth_token');
+      debugPrint('Getting genie details for ID: $genieId');
+
+      final url = '$genieURL/get?genieId=$genieId';
+      debugPrint('Calling URL: $url');
+
       final response = await http.get(
-        Uri.parse('$genieURL/get-genie-by-id?genieId=$genieId'),
+        Uri.parse(url),
         headers: {
           'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
         },
       );
 
+      debugPrint('Response status: ${response.statusCode}');
+      debugPrint('Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = json.decode(response.body);
-
-        if (responseBody.containsKey('genie')) {
-          final Map<String, dynamic> genieData = responseBody['genie'];
+        if (responseBody.containsKey('genies')) {
+          final Map<String, dynamic> genieData = responseBody['genies'];
           return Genie.fromJson(genieData);
         } else {
+          debugPrint('Response does not contain genie key: $responseBody');
           throw Exception('Invalid response format');
         }
       } else {
@@ -323,7 +332,13 @@ class GenieHelper {
       }
     } catch (e) {
       debugPrint('Error getting genie by id: $e');
-      return Genie.fromJson({});
+      return Genie(
+        id: genieId,
+        title: 'Untitled Genie',
+        nameSurnameCreator: 'Unknown Creator',
+        description: 'No description available',
+        target: 'No target available',
+      );
     }
   }
 }
