@@ -18,7 +18,8 @@ class AcceptTermsCard extends StatefulWidget {
   State<AcceptTermsCard> createState() => _AcceptTermsCardState();
 }
 
-class _AcceptTermsCardState extends State<AcceptTermsCard> {
+class _AcceptTermsCardState extends State<AcceptTermsCard>
+    with SingleTickerProviderStateMixin {
   // Genie Manager
   final genieHelper = GenieHelper();
   late Genie _localGenieData;
@@ -31,11 +32,98 @@ class _AcceptTermsCardState extends State<AcceptTermsCard> {
   // Loading state
   bool _isLoading = false; // Add this variable
 
+  // Animation Controller
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
   @override
   void initState() {
     super.initState();
-    // Initialize the local genieData copy with the initial data
+    // Initialize animations
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOutBack,
+      ),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeIn,
+      ),
+    );
+
+    _animationController.forward();
     _localGenieData = widget.genieData;
+  }
+
+  Widget _buildCheckboxItem({
+    required bool value,
+    required ValueChanged<bool?> onChanged,
+    required String text,
+    required int index,
+  }) {
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 500 + (index * 200)),
+      tween: Tween(begin: 0.0, end: 1.0),
+      builder: (context, double animValue, child) {
+        // rinominato per evitare conflitti
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - animValue)),
+          child: Opacity(
+            opacity: animValue,
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: value ? greenIOS.withOpacity(0.3) : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                leading: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Checkbox(
+                    checkColor: black,
+                    activeColor: value ? greenIOS : red,
+                    value: value,
+                    onChanged: onChanged,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ),
+                title: Text(
+                  text,
+                  style: const TextStyle(
+                    color: white,
+                    fontSize: 16,
+                    fontFamily: 'Roboto',
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   // Genie Creation with loading indicator
@@ -92,33 +180,55 @@ class _AcceptTermsCardState extends State<AcceptTermsCard> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 13),
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(context),
-                    const SizedBox(height: 24),
-                    _buildContent(),
-                  ],
-                ),
+    return AnimatedBuilder(
+      animation: _scaleAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: Opacity(
+            opacity: _fadeAnimation.value,
+            child: GestureDetector(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 13,
+                        ),
+                        decoration: BoxDecoration(
+                          color: cardColor,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.1),
+                            width: 1,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildHeader(context),
+                              const SizedBox(height: 10),
+                              _buildContent(),
+                              const SizedBox(height: 10),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -127,9 +237,7 @@ class _AcceptTermsCardState extends State<AcceptTermsCard> {
       mainAxisSize: MainAxisSize.min,
       children: [
         GestureDetector(
-          onTap: () {
-            Navigator.pop(context);
-          },
+          onTap: () => Navigator.pop(context),
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -145,18 +253,25 @@ class _AcceptTermsCardState extends State<AcceptTermsCard> {
             ],
           ),
         ),
-        Stack(
-          alignment: Alignment.topRight,
-          clipBehavior: Clip.none,
-          children: [
-            Center(
-              child: Image.asset(
-                "assets/images/verified.png",
-                width: 200,
-                height: 200,
+        const SizedBox(height: 24),
+        TweenAnimationBuilder<double>(
+          duration: const Duration(milliseconds: 1000),
+          tween: Tween(begin: 0.0, end: 1.0),
+          builder: (context, value, child) {
+            return Transform.scale(
+              scale: 0.5 + (0.5 * value),
+              child: Opacity(
+                opacity: value,
+                child: Center(
+                  child: Image.asset(
+                    "assets/images/verified.png",
+                    width: 200,
+                    height: 200,
+                  ),
+                ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ],
     );
@@ -167,78 +282,61 @@ class _AcceptTermsCardState extends State<AcceptTermsCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Checkbox 1: Example of Terms and Conditions
-          Row(
-            children: [
-              Checkbox(
-                checkColor: black, // Color for the check mark
-                activeColor:
-                    _isTermsAccepted ? greenIOS : red, // Change when checked
-                value: _isTermsAccepted,
-                onChanged: (bool? newValue) {
-                  setState(() {
-                    _isTermsAccepted = newValue ?? false;
-                  });
-                },
-              ),
-              const Text(
-                'I accept the Terms and Conditions',
-                style: normalWriteWhite,
-              )
-            ],
+          _buildCheckboxItem(
+            value: _isTermsAccepted,
+            onChanged: (value) =>
+                setState(() => _isTermsAccepted = value ?? false),
+            text: 'I accept the Terms and Conditions',
+            index: 0,
           ),
-
-          // Checkbox 2: Example of Privacy Policy
-          Row(
-            children: [
-              Checkbox(
-                checkColor: black, // Color for the check mark
-                activeColor:
-                    _isPrivacyAccepted ? greenIOS : red, // Change when checked
-                value: _isPrivacyAccepted,
-                onChanged: (bool? newValue) {
-                  setState(() {
-                    _isPrivacyAccepted = newValue ?? false;
-                  });
-                },
-              ),
-              const Text('I accept the Privacy Policy', style: normalWriteWhite)
-            ],
+          _buildCheckboxItem(
+            value: _isPrivacyAccepted,
+            onChanged: (value) =>
+                setState(() => _isPrivacyAccepted = value ?? false),
+            text: 'I accept the Privacy Policy',
+            index: 1,
           ),
-
-          // Checkbox 3: Example of Newsletter Subscription
-          Row(
-            children: [
-              Checkbox(
-                checkColor: black,
-                activeColor: _isNewsletterSubscribed ? greenIOS : red,
-                value: _isNewsletterSubscribed,
-                onChanged: (bool? newValue) {
-                  setState(() {
-                    _isNewsletterSubscribed = newValue ?? false;
-                  });
-                },
-              ),
-              const Text('I subscribe to the Newsletter',
-                  style: normalWriteWhite)
-            ],
+          _buildCheckboxItem(
+            value: _isNewsletterSubscribed,
+            onChanged: (value) =>
+                setState(() => _isNewsletterSubscribed = value ?? false),
+            text: 'I subscribe to the Newsletter',
+            index: 2,
           ),
-          const SizedBox(height: 30),
-
-          // Conditionally display either the button or the loading indicator
+          const SizedBox(height: 40),
           Center(
             child: _isLoading
-                ? CircularProgressIndicator() // Show loading indicator when loading
-                : MyElevatedButton(
-                    text: "Eureka!",
-                    isBold: true,
-                    isBack: true,
-                    onPressed: () {
-                      _handleButtonPress(context);
+                ? TweenAnimationBuilder<double>(
+                    duration: const Duration(milliseconds: 500),
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(greenIOS),
+                        ),
+                      );
+                    },
+                  )
+                : TweenAnimationBuilder<double>(
+                    duration: const Duration(milliseconds: 800),
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    builder: (context, value, child) {
+                      return Transform.scale(
+                        scale: 0.8 + (0.2 * value),
+                        child: Opacity(
+                          opacity: value,
+                          child: MyElevatedButton(
+                            text: "Eureka!",
+                            isBold: true,
+                            isBack: true,
+                            onPressed: () => _handleButtonPress(context),
+                          ),
+                        ),
+                      );
                     },
                   ),
           ),
-          const SizedBox(height: 10),
         ],
       ),
     );
