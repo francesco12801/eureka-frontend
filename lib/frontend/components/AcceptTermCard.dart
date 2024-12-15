@@ -204,8 +204,8 @@ class _AcceptTermsCardState extends State<AcceptTermsCard>
                           color: cardColor,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.1),
-                            width: 1,
+                            color: Colors.white.withOpacity(0.8),
+                            width: 0.2,
                           ),
                         ),
                         child: Padding(

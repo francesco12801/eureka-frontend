@@ -623,14 +623,14 @@ class _NetworkPageState extends State<NetworkPage>
               CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  SliverAppBar(
+                  const SliverAppBar(
                     floating: true,
                     backgroundColor: primaryColor,
                     elevation: 0,
                     automaticallyImplyLeading: false,
                     centerTitle: false,
                     titleSpacing: 25,
-                    title: const Text(
+                    title: Text(
                       'Collaboration',
                       style: TextStyle(
                         fontSize: 25,

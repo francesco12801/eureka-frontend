@@ -188,6 +188,10 @@ class _GeniePublicCardState extends State<GeniePublicCard> {
                 decoration: BoxDecoration(
                   color: cardColor,
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.8),
+                    width: 0.2,
+                  ),
                 ),
                 child: SingleChildScrollView(
                   child: Padding(

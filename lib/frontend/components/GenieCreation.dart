@@ -220,9 +220,12 @@ class _PostCardCreationState extends State<PostCardCreation>
             child: Container(
               margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 13),
               decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(20),
-              ),
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.8),
+                    width: 0.2,
+                  )),
               child: Padding(
                 padding: const EdgeInsets.all(18),
                 child: Column(

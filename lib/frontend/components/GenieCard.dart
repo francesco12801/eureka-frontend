@@ -172,6 +172,10 @@ class _GenieCardState extends State<GenieCard> {
               decoration: BoxDecoration(
                 color: cardColor,
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.8),
+                  width: 0.2,
+                ),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(18),
