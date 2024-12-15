@@ -3,7 +3,7 @@ import 'package:eureka_final_version/frontend/models/constant/profile_preview.da
 import 'package:eureka_final_version/frontend/views/PublicProfile.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:eureka_final_version/frontend/components/my_style.dart';
+import 'package:eureka_final_version/frontend/components/MyStyle.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
 
 class FollowersPage extends StatefulWidget {

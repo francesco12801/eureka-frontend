@@ -1,7 +1,7 @@
-import 'package:eureka_final_version/frontend/components/my_elevated_button.dart';
-import 'package:eureka_final_version/frontend/components/my_input_button.dart';
-import 'package:eureka_final_version/frontend/components/my_motivational_quotes.dart';
-import 'package:eureka_final_version/frontend/components/my_style.dart';
+import 'package:eureka_final_version/frontend/components/MyElevatedButton.dart';
+import 'package:eureka_final_version/frontend/components/MyInputButton.dart';
+import 'package:eureka_final_version/frontend/components/MyMotivationalQuotes.dart';
+import 'package:eureka_final_version/frontend/components/MyStyle.dart';
 import 'package:eureka_final_version/frontend/views/ContinueSignUp.dart';
 import 'package:flutter/material.dart';
 import 'package:passwordfield/passwordfield.dart';

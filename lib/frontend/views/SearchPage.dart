@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:eureka_final_version/frontend/api/search/search_engine_helper.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
-import 'package:eureka_final_version/frontend/components/my_style.dart';
+import 'package:eureka_final_version/frontend/components/MyStyle.dart';
 import 'package:eureka_final_version/frontend/constants/utils.dart';
 import 'package:eureka_final_version/frontend/models/constant/profile_preview.dart';
 import 'package:eureka_final_version/frontend/models/constant/user.dart';

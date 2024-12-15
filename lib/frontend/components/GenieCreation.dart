@@ -1,14 +1,14 @@
 import 'package:eureka_final_version/frontend/api/auth/auth_api.dart';
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
-import 'package:eureka_final_version/frontend/components/my_text_button.dart';
+import 'package:eureka_final_version/frontend/components/MyTextButton.dart';
 import 'package:eureka_final_version/frontend/models/constant/genie.dart';
 import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:eureka_final_version/frontend/views/AcceptTerms.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:eureka_final_version/frontend/components/my_style.dart';
+import 'package:eureka_final_version/frontend/components/MyStyle.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:image_picker/image_picker.dart';

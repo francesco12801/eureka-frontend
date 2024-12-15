@@ -1,8 +1,8 @@
-import 'package:eureka_final_version/frontend/components/card_creation.dart';
+import 'package:eureka_final_version/frontend/components/GenieCreation.dart';
 import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:flutter/material.dart';
 
-import 'package:eureka_final_version/frontend/components/my_style.dart';
+import 'package:eureka_final_version/frontend/components/MyStyle.dart';
 
 class EurekaPage extends StatefulWidget {
   final EurekaUser userData;

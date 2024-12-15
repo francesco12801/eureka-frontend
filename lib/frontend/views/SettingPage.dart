@@ -1,7 +1,7 @@
 import 'package:eureka_final_version/frontend/api/auth/auth_api.dart';
-import 'package:eureka_final_version/frontend/components/my_elevated_button.dart';
-import 'package:eureka_final_version/frontend/components/my_motivational_quotes.dart';
-import 'package:eureka_final_version/frontend/components/my_style.dart';
+import 'package:eureka_final_version/frontend/components/MyElevatedButton.dart';
+import 'package:eureka_final_version/frontend/components/MyMotivationalQuotes.dart';
+import 'package:eureka_final_version/frontend/components/MyStyle.dart';
 import 'package:eureka_final_version/frontend/constants/routes.dart';
 import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:flutter/material.dart';

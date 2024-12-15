@@ -1,7 +1,11 @@
 import 'package:eureka_final_version/frontend/api/auth/auth_api.dart';
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
+import 'package:eureka_final_version/frontend/api/references/reference_manager.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
-import 'package:eureka_final_version/frontend/components/personal_card.dart';
+import 'package:eureka_final_version/frontend/components/MyAnimatedTabBar.dart';
+import 'package:eureka_final_version/frontend/components/MyCalendar.dart';
+import 'package:eureka_final_version/frontend/components/GenieCard.dart';
+import 'package:eureka_final_version/frontend/components/ReferencesView.dart';
 import 'package:eureka_final_version/frontend/components/tab_bar_profile.dart';
 import 'package:eureka_final_version/frontend/constants/routes.dart';
 import 'package:eureka_final_version/frontend/constants/utils.dart';
@@ -11,8 +15,8 @@ import 'package:eureka_final_version/frontend/views/EditProfile.dart';
 import 'package:eureka_final_version/frontend/views/SettingPage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:eureka_final_version/frontend/components/my_navigation_bar.dart';
-import 'package:eureka_final_version/frontend/components/my_style.dart';
+import 'package:eureka_final_version/frontend/components/MyNavigationBar.dart';
+import 'package:eureka_final_version/frontend/components/MyStyle.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -27,6 +31,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final GenieHelper genieHelper = GenieHelper();
   final AuthHelper authHelper = AuthHelper();
   final UserHelper userHelper = UserHelper();
+  final ReferenceHelper referenceHelper = ReferenceHelper();
   final _secureStorage = const FlutterSecureStorage();
 
   late bool isProfileNull;
@@ -130,59 +135,72 @@ class _ProfilePageState extends State<ProfilePage> {
                 onTabSelected: _onTabSelected,
               ),
               const SizedBox(height: 15),
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: geniesFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            SizedBox(height: 50),
-                            Text(
-                              'No Genies Yet 😢',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                              textAlign: TextAlign.center,
+              AnimatedTabContent(
+                selectedIndex: _selectedTabIndex,
+                children: [
+                  // Genies Tab
+                  FutureBuilder<List<Map<String, dynamic>>>(
+                    future: geniesFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 24.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                SizedBox(height: 50),
+                                Text(
+                                  'No Genies Yet 😢',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: 20),
+                                Text(
+                                  'Unleash your creativity and create the first Genie! 💡',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
                             ),
-                            SizedBox(height: 20),
-                            Text(
-                              'Unleash your creativity and create the first Genie! 💡',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  } else {
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        final genie = Genie.fromMap(snapshot.data![index]);
-                        return GenieCard(
-                            genie: genie,
-                            user: _currentUserData,
-                            genieHelper: genieHelper);
-                      },
-                    );
-                  }
-                },
+                          ),
+                        );
+                      } else {
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (context, index) {
+                            final genie = Genie.fromMap(snapshot.data![index]);
+                            return GenieCard(
+                              genie: genie,
+                              user: _currentUserData,
+                              genieHelper: genieHelper,
+                            );
+                          },
+                        );
+                      }
+                    },
+                  ),
+                  // Calendar Tab
+                  const ModernCalendarView(),
+                  // References Tab
+                  ReferencesView(
+                    referencesFuture: referenceHelper.getUserReferences(),
+                  ),
+                ],
               ),
             ],
           ),
@@ -190,9 +208,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       bottomNavigationBar: MyNavigationBar(
         currentIndex: 4,
-        onTap: (index) {
-          onTap(index);
-        },
+        onTap: onTap,
       ),
     );
   }

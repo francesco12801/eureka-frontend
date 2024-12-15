@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
-import 'package:eureka_final_version/frontend/components/my_elevated_button.dart';
-import 'package:eureka_final_version/frontend/components/my_style.dart';
+import 'package:eureka_final_version/frontend/components/MyElevatedButton.dart';
+import 'package:eureka_final_version/frontend/components/MyStyle.dart';
 import 'package:eureka_final_version/frontend/constants/routes.dart';
 import 'package:eureka_final_version/frontend/models/constant/genie.dart';
 import 'package:eureka_final_version/frontend/models/constant/user.dart';

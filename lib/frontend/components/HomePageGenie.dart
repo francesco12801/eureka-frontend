@@ -3,7 +3,7 @@ import 'package:eureka_final_version/frontend/api/toggle/toggle_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
-import 'package:eureka_final_version/frontend/components/my_style.dart';
+import 'package:eureka_final_version/frontend/components/MyStyle.dart';
 import 'package:eureka_final_version/frontend/models/constant/genie.dart';
 import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:flutter/cupertino.dart';

@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:eureka_final_version/frontend/components/my_style.dart';
+import 'package:eureka_final_version/frontend/components/MyStyle.dart';
 
 import 'package:flutter/material.dart';
 

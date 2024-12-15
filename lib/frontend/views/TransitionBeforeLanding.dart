@@ -1,4 +1,4 @@
-import 'package:eureka_final_version/frontend/components/my_style.dart';
+import 'package:eureka_final_version/frontend/components/MyStyle.dart';
 import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:eureka_final_version/frontend/views/HomePage.dart';
 import 'package:flutter/material.dart';
