@@ -1,17 +1,21 @@
+import 'dart:ui';
 import 'package:eureka_final_version/frontend/api/auth/auth_api.dart';
 import 'package:eureka_final_version/frontend/api/collaborate/collaborate_manager.dart';
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
 import 'package:eureka_final_version/frontend/api/navigation_helper.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
 import 'package:eureka_final_version/frontend/components/CollaborationCluser.dart';
+import 'package:eureka_final_version/frontend/components/ShimmerAvatar.dart';
 import 'package:eureka_final_version/frontend/components/my_navigation_bar.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/constants/routes.dart';
 import 'package:eureka_final_version/frontend/models/constant/collaboration.dart';
+import 'package:eureka_final_version/frontend/models/constant/profile_preview.dart';
 import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:eureka_final_version/frontend/views/LoginPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:loading_indicator/loading_indicator.dart';
 
 class NetworkPage extends StatefulWidget {
   final EurekaUser userData;
@@ -21,7 +25,8 @@ class NetworkPage extends StatefulWidget {
   State<NetworkPage> createState() => _NetworkPageState();
 }
 
-class _NetworkPageState extends State<NetworkPage> {
+class _NetworkPageState extends State<NetworkPage>
+    with TickerProviderStateMixin {
   final AuthHelper authHelper = AuthHelper();
   final UserHelper userHelper = UserHelper();
   final GenieHelper _genieService = GenieHelper();
@@ -29,11 +34,21 @@ class _NetworkPageState extends State<NetworkPage> {
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   List<CollaborationCluster> collaborationClusters = [];
   bool isLoading = true;
+  late final AnimationController _refreshIconController = AnimationController(
+    duration: const Duration(milliseconds: 1000),
+    vsync: this,
+  );
 
   @override
   void initState() {
     super.initState();
     _loadCollaborations();
+  }
+
+  @override
+  void dispose() {
+    _refreshIconController.dispose();
+    super.dispose();
   }
 
   void onTap(int index) async {
@@ -152,91 +167,6 @@ class _NetworkPageState extends State<NetworkPage> {
     }
   }
 
-  Widget _buildCollaborationList() {
-    return ListView.builder(
-      itemCount: collaborationClusters.length,
-      shrinkWrap: true,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemBuilder: (context, index) {
-        final cluster = collaborationClusters[index];
-        return _buildCollaborationCluster(cluster);
-      },
-    );
-  }
-
-  Widget _buildCollaborationCluster(CollaborationCluster cluster) {
-    debugPrint('Building cluster for genieId: ${cluster.genieId}');
-    debugPrint('Collaborations: ${cluster.collaborations}');
-
-    return Card(
-      color: cardColor,
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: ExpansionTile(
-        title: Row(
-          children: [
-            Container(
-              width: 4,
-              height: 40,
-              decoration: BoxDecoration(
-                color: _getStatusColor(cluster),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    cluster.genieName ?? 'Genie ${cluster.genieId}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  FutureBuilder<String>(
-                      future: _loadGenieOwnerName(cluster.genieId),
-                      builder: (context, snapshot) {
-                        return Text(
-                          snapshot.data ?? 'Loading...',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
-                            fontSize: 14,
-                          ),
-                        );
-                      }),
-                ],
-              ),
-            ),
-            if (_hasPendingCollaborations(cluster))
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${_getPendingCount(cluster)} pending',
-                  style: const TextStyle(
-                    color: Colors.orange,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        children: [
-          _buildCollaboratorsList(cluster),
-        ],
-      ),
-    );
-  }
-
   Future<String> _loadGenieOwnerName(String genieId) async {
     try {
       return 'Owner Name';
@@ -330,10 +260,156 @@ class _NetworkPageState extends State<NetworkPage> {
         .any((collab) => collab.status == CollaborationStatus.PENDING);
   }
 
-  int _getPendingCount(CollaborationCluster cluster) {
-    return cluster.collaborations
-        .where((collab) => collab.status == CollaborationStatus.PENDING)
-        .length;
+  Future<Map<String, dynamic>> _loadUserData(String userId) async {
+    try {
+      final futures = await Future.wait([
+        userHelper.getPublicProfileImage(userId),
+        userHelper.getNameSurname(userId),
+        userHelper.getProfession(userId),
+      ]);
+
+      return {
+        'profileImage': futures[0],
+        'nameSurname': futures[1],
+        'profession': futures[2],
+      };
+    } catch (e) {
+      debugPrint('Error loading user data: $e');
+      throw e;
+    }
+  }
+
+  String _formatTimestamp(int timestamp) {
+    final now = DateTime.now();
+    final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+    final difference = now.difference(date);
+
+    if (difference.inDays > 7) {
+      return '${date.day}/${date.month}/${date.year}';
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: 100),
+          Icon(
+            Icons.groups_outlined,
+            size: 80,
+            color: Colors.white.withOpacity(0.5),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No Collaborations Yet',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.7),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Start collaborating with others to see them here',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.5),
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorTile() {
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundColor: Colors.grey.withOpacity(0.2),
+        child: const Icon(Icons.error_outline, color: Colors.red),
+      ),
+      title: const Text(
+        'Error loading user data',
+        style: TextStyle(color: Colors.red),
+      ),
+      subtitle: const Text(
+        'Please try again later',
+        style: TextStyle(color: Colors.red),
+      ),
+    );
+  }
+
+  Widget _buildCollaborationList() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ListView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
+        itemCount: collaborationClusters.length,
+        itemBuilder: (context, index) {
+          final cluster = collaborationClusters[index];
+          return _buildCollaborationCluster(cluster);
+        },
+      ),
+    );
+  }
+
+  Widget _buildCollaborationCluster(CollaborationCluster cluster) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      elevation: 2,
+      color: const Color(0xFF2A2A2A),
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+          colorScheme: ColorScheme.dark(
+            primary: _getStatusColor(cluster),
+          ),
+        ),
+        child: ExpansionTile(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                cluster.genieName ?? 'Genie ${cluster.genieId}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 4),
+              FutureBuilder<String>(
+                future: _loadGenieOwnerName(cluster.genieId),
+                builder: (context, snapshot) {
+                  return Text(
+                    snapshot.data ?? 'Loading...',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 14,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          children: [
+            _buildCollaboratorsList(cluster),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildCollaboratorsList(CollaborationCluster cluster) {
@@ -384,172 +460,151 @@ class _NetworkPageState extends State<NetworkPage> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const ListTile(
-            leading: CircleAvatar(
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            title: LinearProgressIndicator(),
+            leading: ShimmerAvatar(),
+            title: ShimmerText(),
+            subtitle: ShimmerText(),
           );
         }
 
         if (snapshot.hasError) {
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Colors.grey.withOpacity(0.2),
-              child: const Icon(Icons.error, color: Colors.red),
-            ),
-            title: const Text(
-              'Error loading user data',
-              style: TextStyle(color: Colors.red),
-            ),
-          );
+          return _buildErrorTile();
         }
 
         final userData = snapshot.data!;
 
-        return ListTile(
-          leading: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isPending ? Colors.orange : Colors.blue.shade400,
-                width: 2,
-              ),
+        return InkWell(
+          onTap: () {
+            final userPublic = EurekaUserPublic(
+              uid: collab.senderId,
+              nameSurname: userData['nameSurname'] ?? '',
+              profession: userData['profession'] ?? '',
+              profileImage: userData['profileImage'],
+            );
+            Navigator.pushNamed(
+              context,
+              publicProfileRoute,
+              arguments: userPublic,
+            );
+          },
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
             ),
-            child: CircleAvatar(
-              backgroundImage: userData['profileImage'] != null
-                  ? NetworkImage(userData['profileImage'])
-                  : null,
-              backgroundColor: Colors.grey.withOpacity(0.2),
-              child: userData['profileImage'] == null
-                  ? const Icon(Icons.person, color: Colors.white)
-                  : null,
-            ),
-          ),
-          title: Text(
-            userData['nameSurname'] ?? 'Unknown',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                userData['profession'] ?? 'No profession',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+            leading: Hero(
+              tag: 'avatar_${collab.senderId}',
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isPending ? Colors.orange : Colors.blue.shade400,
+                    width: 2,
+                  ),
+                ),
+                child: CircleAvatar(
+                  radius: 24,
+                  backgroundImage: userData['profileImage'] != null
+                      ? NetworkImage(userData['profileImage'])
+                      : null,
+                  backgroundColor: Colors.grey.withOpacity(0.2),
+                  child: userData['profileImage'] == null
+                      ? const Icon(Icons.person, color: Colors.white)
+                      : null,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                _formatTimestamp(collab.createdAt),
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.5),
-                  fontSize: 12,
-                ),
+            ),
+            title: Text(
+              userData['nameSurname'] ?? 'Unknown',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                color: Colors.white,
               ),
-            ],
-          ),
-          trailing: isPending
-              ? Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.check, size: 20),
-                      ),
-                      onPressed: () => _acceptCollaboration(collab),
-                      color: Colors.green,
-                    ),
-                    IconButton(
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.close, size: 20),
-                      ),
-                      onPressed: () => _declineCollaboration(collab),
-                      color: Colors.red,
-                    ),
-                  ],
-                )
-              : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.mail_outline, size: 20),
-                      ),
-                      onPressed: () => _sendMessage(collab),
-                      color: Colors.blue,
-                    ),
-                    IconButton(
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.videocam_outlined, size: 20),
-                      ),
-                      onPressed: () => _startVideoCall(collab),
-                      color: Colors.blue,
-                    ),
-                  ],
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  userData['profession'] ?? 'No profession',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 14,
+                  ),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  _formatTimestamp(collab.createdAt),
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            trailing: isPending
+                ? _buildPendingActions(collab)
+                : _buildAcceptedActions(collab),
+          ),
         );
       },
     );
   }
 
-  Future<Map<String, dynamic>> _loadUserData(String userId) async {
-    try {
-      final futures = await Future.wait([
-        userHelper.getPublicProfileImage(userId),
-        userHelper.getNameSurname(userId),
-        userHelper.getProfession(userId),
-      ]);
-
-      return {
-        'profileImage': futures[0],
-        'nameSurname': futures[1],
-        'profession': futures[2],
-      };
-    } catch (e) {
-      debugPrint('Error loading user data: $e');
-      throw e;
-    }
+  Widget _buildPendingActions(Collaboration collab) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildActionButton(
+          icon: Icons.check_rounded,
+          color: Colors.green,
+          onPressed: () => _acceptCollaboration(collab),
+        ),
+        const SizedBox(width: 8),
+        _buildActionButton(
+          icon: Icons.close_rounded,
+          color: Colors.red,
+          onPressed: () => _declineCollaboration(collab),
+        ),
+      ],
+    );
   }
 
-  String _formatTimestamp(int timestamp) {
-    final now = DateTime.now();
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-    final difference = now.difference(date);
+  Widget _buildAcceptedActions(Collaboration collab) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildActionButton(
+          icon: Icons.mail_outline_rounded,
+          color: Colors.blue,
+          onPressed: () => _sendMessage(collab),
+        ),
+        const SizedBox(width: 8),
+        _buildActionButton(
+          icon: Icons.videocam_outlined,
+          color: Colors.blue,
+          onPressed: () => _startVideoCall(collab),
+        ),
+      ],
+    );
+  }
 
-    if (difference.inDays > 7) {
-      return '${date.day}/${date.month}/${date.year}';
-    } else if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
-    } else {
-      return 'Just now';
-    }
+  Widget _buildActionButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return Material(
+      color: color.withOpacity(0.2),
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onPressed,
+        customBorder: const CircleBorder(),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Icon(icon, size: 20, color: color),
+        ),
+      ),
+    );
   }
 
   @override
@@ -557,38 +612,78 @@ class _NetworkPageState extends State<NetworkPage> {
     return Scaffold(
       backgroundColor: primaryColor,
       body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              color: primaryColor,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 25.0, vertical: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await _loadCollaborations();
+          },
+          color: Colors.white,
+          backgroundColor: const Color(0xFF2A2A2A),
+          child: Stack(
+            children: [
+              CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverAppBar(
+                    floating: true,
+                    backgroundColor: primaryColor,
+                    elevation: 0,
+                    automaticallyImplyLeading: false,
+                    centerTitle: false,
+                    titleSpacing: 25,
+                    title: const Text(
                       'Collaboration',
                       style: TextStyle(
-                        color: white,
                         fontSize: 25,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                    IconButton(
-                      icon: filterUnreadIcon,
-                      onPressed: () => _loadCollaborations(),
+                  ),
+                  SliverToBoxAdapter(
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 300),
+                      opacity: isLoading ? 0.0 : 1.0,
+                      child: collaborationClusters.isEmpty && !isLoading
+                          ? _buildEmptyState()
+                          : _buildCollaborationList(),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
-            Expanded(
-              child: isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _buildCollaborationList(),
-            ),
-          ],
+              if (isLoading)
+                BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A1A1A),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: LoadingIndicator(
+                          indicatorType: Indicator.ballSpinFadeLoader,
+                          colors: List.generate(
+                            8,
+                            (index) =>
+                                Colors.white.withOpacity(1 - (index * 0.1)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: MyNavigationBar(
@@ -614,7 +709,20 @@ class _NetworkPageState extends State<NetworkPage> {
     }
   }
 
-  void _declineCollaboration(Collaboration collab) {}
+  void _declineCollaboration(Collaboration collab) async {
+    try {
+      await collaborateService.declineCollab(collab.id);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Collaboration declined')),
+      );
+      _loadCollaborations();
+    } catch (e) {
+      debugPrint('Error declining collaboration: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error declining collaboration')),
+      );
+    }
+  }
 
   void _sendMessage(Collaboration collab) {}
 

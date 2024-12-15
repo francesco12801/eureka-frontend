@@ -33,7 +33,7 @@ class _PostCardCreationState extends State<PostCardCreation>
   List<File>? _images = [];
   Position? _currentPosition;
   String? _city;
-  List<File>? _files = [];
+  final List<File> _files = [];
   final picker = ImagePicker();
   final List<String>? imageStringList = [];
   final List<String>? fileStringList = [];
@@ -162,12 +162,11 @@ class _PostCardCreationState extends State<PostCardCreation>
         _currentPosition!.latitude, _currentPosition!.longitude);
     if (placemarks.isNotEmpty) {
       setState(() {
-        _city = placemarks[0].locality; // Store the city name
+        _city = placemarks[0].locality;
       });
     }
   }
 
-  // Pop-up to confim position
   Future<void> _showLocationConfirmationDialog() async {
     return showCupertinoDialog(
       context: context,
@@ -323,6 +322,22 @@ class _PostCardCreationState extends State<PostCardCreation>
       builder: (context) => CupertinoActionSheet(
         actions: [
           CupertinoActionSheetAction(
+            child: const Text('Take a photo',
+                style: TextStyle(color: Colors.black)),
+            onPressed: () async {
+              Navigator.of(context).pop();
+              final picker = ImagePicker();
+              final XFile? photo =
+                  await picker.pickImage(source: ImageSource.camera);
+              if (photo != null) {
+                setState(() {
+                  _images ??= [];
+                  _images!.add(File(photo.path));
+                });
+              }
+            },
+          ),
+          CupertinoActionSheetAction(
             child: const Text('Pick from gallery',
                 style: TextStyle(color: Colors.black)),
             onPressed: () async {
@@ -341,7 +356,7 @@ class _PostCardCreationState extends State<PostCardCreation>
                 style: TextStyle(color: Colors.black)),
             onPressed: () async {
               Navigator.of(context).pop();
-              pickFile(); // Supponendo che tu abbia un metodo per scegliere file
+              pickFile();
             },
           ),
         ],

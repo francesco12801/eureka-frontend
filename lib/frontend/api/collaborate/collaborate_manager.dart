@@ -63,6 +63,31 @@ class CollaborateService {
     }
   }
 
+  Future<void> declineCollab(String collaborationId) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      debugPrint('Collab id: $collaborationId');
+      final Map<String, String> requestBody = {
+        'collaborationId': collaborationId
+      };
+      final response = await http.post(
+        Uri.parse('$routeCollab/decline'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(requestBody),
+      );
+      if (response.statusCode == 200) {
+        debugPrint('Collab declined');
+      } else {
+        debugPrint('Error declining collab');
+      }
+    } catch (e) {
+      debugPrint("Error declining collab: $e");
+    }
+  }
+
   Future<bool> checkExistingCollab(
       String senderId, String receiverId, String genieId) async {
     try {

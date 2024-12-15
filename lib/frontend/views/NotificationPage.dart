@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:eureka_final_version/frontend/api/auth/auth_api.dart';
 import 'package:eureka_final_version/frontend/api/collaborate/collaborate_manager.dart';
 import 'package:eureka_final_version/frontend/api/navigation_helper.dart';
@@ -5,7 +6,6 @@ import 'package:eureka_final_version/frontend/api/notification/notify_manager.da
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
 import 'package:eureka_final_version/frontend/components/NotificationGroup.dart';
 import 'package:eureka_final_version/frontend/components/my_navigation_bar.dart';
-import 'package:eureka_final_version/frontend/components/my_popup.dart';
 import 'package:eureka_final_version/frontend/components/my_style.dart';
 import 'package:eureka_final_version/frontend/components/my_tab_bar.dart';
 import 'package:eureka_final_version/frontend/constants/routes.dart';
@@ -15,6 +15,7 @@ import 'package:eureka_final_version/frontend/views/LoginPage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:loading_indicator/loading_indicator.dart';
 
 class NotificationPage extends StatefulWidget {
   final EurekaUser userData;
@@ -30,9 +31,10 @@ class _NotificationPageState extends State<NotificationPage> {
   final AuthHelper authHelper = AuthHelper();
   final _secureStorage = const FlutterSecureStorage();
   int _selectedTabIndex = 0;
+  bool isLoading = true;
   List<NotificationEureka> notifications = [];
   List<NotificationEureka> filteredNotifications = [];
-  Map<String, List<NotificationEureka>> _groupedNotifications = {};
+  final Map<String, List<NotificationEureka>> _groupedNotifications = {};
   final CollaborateService collaborateService = CollaborateService();
 
   @override
@@ -331,27 +333,24 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 
   Future<void> _loadNotifications() async {
+    if (!mounted) return;
+
     try {
+      setState(() => isLoading = true);
       notifications = await widget.notificationHelper
           .getUserNotifications(widget.userData.uid);
       _filterNotifications(_selectedTabIndex);
-      setState(() {});
     } catch (e) {
-      // Handle error
       debugPrint('Error loading notifications: $e');
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Error'),
-          content: Text('Error loading notifications: $e'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading notifications: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
@@ -854,7 +853,6 @@ class _NotificationPageState extends State<NotificationPage> {
 
   Future<void> _onPressedAccept(String collaborationId) async {
     try {
-      // Mostra loading spinner
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -872,13 +870,10 @@ class _NotificationPageState extends State<NotificationPage> {
         },
       );
 
-      // Accetta la collaborazione
       await collaborateService.acceptCollab(collaborationId);
 
-      // Rimuovi lo spinner
       Navigator.pop(context);
 
-      // Rimuovi la notifica corrente
       setState(() {
         notifications.removeWhere((n) =>
             n.type == 'COLLABORATION_REQUEST' &&
@@ -886,7 +881,6 @@ class _NotificationPageState extends State<NotificationPage> {
         _filterNotifications(_selectedTabIndex);
       });
 
-      // Mostra alert di successo
       await showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -1050,61 +1044,102 @@ class _NotificationPageState extends State<NotificationPage> {
     return Scaffold(
       backgroundColor: primaryColor,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await _loadNotifications();
+          },
+          color: Colors.white,
+          backgroundColor: const Color(0xFF2A2A2A),
+          child: Stack(
+            children: [
+              Column(
                 children: [
-                  const Text(
-                    'Notifications',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Roboto',
+                  // Header
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Notifications',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Roboto',
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(CupertinoIcons.checkmark_alt,
+                              color: Colors.white),
+                          onPressed: () {
+                            setState(() {
+                              notifications.forEach((n) => n.read = true);
+                              _filterNotifications(_selectedTabIndex);
+                              _markAllAsRead();
+                            });
+                          },
+                        ),
+                      ],
                     ),
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: cardColor,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(CupertinoIcons.checkmark_alt,
-                          color: Colors.white),
-                      onPressed: () {
-                        setState(() {
-                          notifications.forEach((n) => n.read = true);
-                          _filterNotifications(_selectedTabIndex);
-                          _markAllAsRead();
-                        });
-                      },
+
+                  // Tab Bar
+                  MyTabBar(
+                    tabs: const ['All', 'Collab', 'Unread'],
+                    selectedIndex: _selectedTabIndex,
+                    onTabSelected: (index) {
+                      setState(() => _selectedTabIndex = index);
+                      _filterNotifications(index);
+                    },
+                  ),
+
+                  // Content
+                  Expanded(
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 300),
+                      opacity: isLoading ? 0.0 : 1.0,
+                      child: filteredNotifications.isEmpty
+                          ? _buildEmptyState()
+                          : _buildGroupedList(),
                     ),
                   ),
                 ],
               ),
-            ),
-
-            // Tab Bar
-            MyTabBar(
-              tabs: const ['All', 'Collab', 'Unread'],
-              selectedIndex: _selectedTabIndex,
-              onTabSelected: (index) {
-                setState(() => _selectedTabIndex = index);
-                _filterNotifications(index);
-              },
-            ),
-
-            // Content
-            Expanded(
-              child: filteredNotifications.isEmpty
-                  ? _buildEmptyState()
-                  : _buildGroupedList(),
-            ),
-          ],
+              if (isLoading)
+                BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A1A1A),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: LoadingIndicator(
+                          indicatorType: Indicator.ballSpinFadeLoader,
+                          colors: List.generate(
+                            8,
+                            (index) =>
+                                Colors.white.withOpacity(1 - (index * 0.1)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: MyNavigationBar(
