@@ -14,6 +14,7 @@ import 'package:eureka_final_version/frontend/models/constant/profile_preview.da
 import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:eureka_final_version/frontend/views/LoginPage.dart';
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 
@@ -169,7 +170,7 @@ class _NetworkPageState extends State<NetworkPage>
 
   Future<String> _loadGenieOwnerName(String genieId) async {
     try {
-      return 'Owner Name';
+      return widget.userData.nameSurname;
     } catch (e) {
       debugPrint('Error loading genie owner name: $e');
       return 'Unknown Owner';
@@ -362,6 +363,16 @@ class _NetworkPageState extends State<NetworkPage>
     );
   }
 
+  Color getRandomColor() {
+    final random = math.Random();
+    return Color.fromRGBO(
+      random.nextInt(256), // Red
+      random.nextInt(256), // Green
+      random.nextInt(256), // Blue
+      1.0, // Opacity
+    );
+  }
+
   Widget _buildCollaborationCluster(CollaborationCluster cluster) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -383,7 +394,7 @@ class _NetworkPageState extends State<NetworkPage>
             children: [
               Text(
                 cluster.genieName ?? 'Genie ${cluster.genieId}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,

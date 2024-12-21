@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:eureka_final_version/frontend/api/URLs/urls.dart';
 import 'package:eureka_final_version/frontend/models/constant/profile_preview.dart';
+import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -561,6 +562,43 @@ class UserHelper {
       }
     } catch (e) {
       throw Exception('Error fetching user public profile: $e');
+    }
+  }
+
+  Future<List<EurekaUser>> getFriendsList(String uid) async {
+    try {
+      final token = await _secureStorage.read(key: 'auth_token');
+      final response = await http.post(
+        Uri.parse('$userURL/get-followers'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(uid),
+      );
+      debugPrint('response: ${response.body}');
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final followersData = data['followers'] as Map<String, dynamic>;
+
+        // Convert the followers map into a list of maps
+        final List<Map<String, dynamic>> followersList = [];
+        followersData.forEach((key, value) {
+          followersList.add(Map<String, dynamic>.from(value));
+        });
+
+        // Convert the list of maps into a list of EurekaUser objects
+        final List<EurekaUser> followers = followersList
+            .map((follower) => EurekaUser.fromMap(follower))
+            .toList();
+
+        return followers;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      debugPrint('Error getting followers: $e');
+      return [];
     }
   }
 }
