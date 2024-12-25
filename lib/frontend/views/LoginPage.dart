@@ -59,31 +59,67 @@ class _LoginPageState extends State<LoginPage> {
   Function()? login(BuildContext context) {
     final BuildContext currentContext = context;
 
-    authHelper
-        .userLogin(emailController.text, passwordController.text, errorMessage)
-        .then((LoginResponse) {
-      if (LoginResponse.success && currentContext.mounted) {
-        // Navigate to the next page, passing the user data
-        Navigator.push(
-          currentContext,
-          MaterialPageRoute(
-            builder: (context) => HomePage(
-              userData: LoginResponse.user!,
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A1A),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/images/eureka_loader.gif',
+                  width: 50,
+                  height: 50,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Logging in...',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
             ),
           ),
         );
+      },
+    );
+
+    authHelper
+        .userLogin(emailController.text, passwordController.text, errorMessage)
+        .then((LoginResponse) {
+      Navigator.pop(currentContext); // Close loader
+      if (LoginResponse.success && currentContext.mounted) {
+        Navigator.push(
+          currentContext,
+          MaterialPageRoute(
+            builder: (context) => HomePage(userData: LoginResponse.user!),
+          ),
+        );
       } else if (currentContext.mounted) {
-        // ModernAlert.show(
-        //   isSuccess: false,
-        //   message: 'Email or Password is incorrect',
-        // );
+        setState(() => errorMessage = true);
       }
     }).catchError((error) {
+      Navigator.pop(currentContext); // Close loader
       if (currentContext.mounted) {
-        // ModernAlert.show(
-        //   isSuccess: false,
-        //   message: 'Email or Password is incorrect',
-        // );
+        setState(() => errorMessage = true);
       }
     });
     return null;

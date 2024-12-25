@@ -29,22 +29,24 @@ class _LoadingPageState extends State<LoadingPage>
     _animationController.forward();
 
     // Start the timer when the widget is initialized
-    Timer(const Duration(milliseconds: 6000), () {
-      // Redirect to another page after the timer expires
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 500),
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              const LoginPage(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(
-              opacity: animation,
-              child: child,
-            );
-          },
-        ),
-      );
+    Timer(const Duration(milliseconds: 2000), () {
+      _animationController.forward().then((_) {
+        // Attendi che la GIF finisca prima di navigare
+        Timer(const Duration(milliseconds: 2000), () {
+          Navigator.pushReplacement(
+            context,
+            PageRouteBuilder(
+              transitionDuration: const Duration(milliseconds: 500),
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  const LoginPage(),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+            ),
+          );
+        });
+      });
     });
   }
 
@@ -62,7 +64,7 @@ class _LoadingPageState extends State<LoadingPage>
         child: FadeTransition(
           opacity: _animation,
           child: Image.asset(
-            'assets/images/eureka.gif',
+            'assets/images/Eureka2.gif',
           ),
         ),
       ),

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:eureka_final_version/frontend/api/auth/auth_api.dart';
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
 import 'package:eureka_final_version/frontend/api/references/reference_manager.dart';
@@ -37,6 +39,8 @@ class _ProfilePageState extends State<ProfilePage> {
   late bool isProfileNull;
   late bool isBannerNull;
 
+  bool isLoading = false;
+
   late EurekaUser _currentUserData;
   String? profileImageUrl;
   String? bannerImageUrl;
@@ -69,6 +73,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadImages() async {
+    setState(() => isLoading = true);
     profileImageUrl = await userHelper.getProfileImage();
     bannerImageUrl = await userHelper.getBannerImage();
     if (profileImageUrl != null) {
@@ -78,7 +83,9 @@ class _ProfilePageState extends State<ProfilePage> {
       isBannerNull = false;
     }
 
-    setState(() {}); // Refresh UI with loaded images
+    await Future.delayed(const Duration(milliseconds: 2300));
+
+    setState(() => isLoading = false);
   }
 
   Future<List<Map<String, dynamic>>> _fetchGenies() async {
@@ -123,85 +130,132 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       backgroundColor: primaryColor,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await _loadImages();
+            await _loadFollowCount();
+            setState(() {
+              geniesFuture = _fetchGenies();
+            });
+          },
+          child: Stack(
             children: [
-              _buildHeader(),
-              _buildFollow(),
-              _buildProfileInfo(),
-              MyTabBarProfile(
-                tabs: const ['💡 Genies', '🗓️ Calendar', '⭐️ References'],
-                selectedIndex: _selectedTabIndex,
-                onTabSelected: _onTabSelected,
-              ),
-              const SizedBox(height: 15),
-              AnimatedTabContent(
-                selectedIndex: _selectedTabIndex,
-                children: [
-                  // Genies Tab
-                  FutureBuilder<List<Map<String, dynamic>>>(
-                    future: geniesFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      } else if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}'));
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 24.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                SizedBox(height: 50),
-                                Text(
-                                  'No Genies Yet 😢',
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+              SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    _buildHeader(),
+                    _buildFollow(),
+                    _buildProfileInfo(),
+                    MyTabBarProfile(
+                      tabs: const [
+                        '💡 Genies',
+                        '🗓️ Calendar',
+                        '⭐️ References'
+                      ],
+                      selectedIndex: _selectedTabIndex,
+                      onTabSelected: _onTabSelected,
+                    ),
+                    const SizedBox(height: 15),
+                    AnimatedTabContent(
+                      selectedIndex: _selectedTabIndex,
+                      children: [
+                        FutureBuilder<List<Map<String, dynamic>>>(
+                          future: geniesFuture,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            } else if (snapshot.hasError) {
+                              return Center(
+                                  child: Text('Error: ${snapshot.error}'));
+                            } else if (!snapshot.hasData ||
+                                snapshot.data!.isEmpty) {
+                              return const Center(
+                                child: Padding(
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: 24.0),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      SizedBox(height: 50),
+                                      Text(
+                                        'No Genies Yet 😢',
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      SizedBox(height: 20),
+                                      Text(
+                                        'Unleash your creativity and create the first Genie! 💡',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.grey,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
                                   ),
-                                  textAlign: TextAlign.center,
                                 ),
-                                SizedBox(height: 20),
-                                Text(
-                                  'Unleash your creativity and create the first Genie! 💡',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      } else {
-                        return ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: snapshot.data!.length,
-                          itemBuilder: (context, index) {
-                            final genie = Genie.fromMap(snapshot.data![index]);
-                            return GenieCard(
-                              genie: genie,
-                              user: _currentUserData,
-                              genieHelper: genieHelper,
-                            );
+                              );
+                            } else {
+                              return ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: snapshot.data!.length,
+                                itemBuilder: (context, index) {
+                                  final genie =
+                                      Genie.fromMap(snapshot.data![index]);
+                                  return GenieCard(
+                                    genie: genie,
+                                    user: _currentUserData,
+                                    genieHelper: genieHelper,
+                                  );
+                                },
+                              );
+                            }
                           },
-                        );
-                      }
-                    },
-                  ),
-                  // Calendar Tab
-                  const ModernCalendarView(),
-                  // References Tab
-                  ReferencesView(
-                    referencesFuture: referenceHelper.getUserReferences(),
-                  ),
-                ],
+                        ),
+                        const ModernCalendarView(),
+                        ReferencesView(
+                          referencesFuture: referenceHelper.getUserReferences(),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
+              if (isLoading)
+                BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A1A1A),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: Image.asset(
+                        'assets/images/eureka_loader.gif',
+                        width: 50,
+                        height: 50,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

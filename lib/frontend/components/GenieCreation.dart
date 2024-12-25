@@ -4,7 +4,7 @@ import 'package:eureka_final_version/frontend/api/auth/auth_api.dart';
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
 import 'package:eureka_final_version/frontend/components/MyTextButton.dart';
-import 'package:eureka_final_version/frontend/components/_CollaboratorListTile.dart';
+import 'package:eureka_final_version/frontend/components/CollaboratorListTile.dart';
 import 'package:eureka_final_version/frontend/models/constant/genie.dart';
 import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:eureka_final_version/frontend/views/AcceptTerms.dart';
@@ -88,11 +88,14 @@ class _PostCardCreationState extends State<PostCardCreation>
     final professionUser = widget.userData.profession;
     final location = _city;
 
+    final collaboratorIds =
+        selectedCollaborators.map((user) => user.uid).toList();
+
     for (final image in _images!) {
       imageStringList!.add(image.path);
     }
 
-    for (final file in _files!) {
+    for (final file in _files) {
       fileStringList!.add(file.path);
     }
 
@@ -105,6 +108,7 @@ class _PostCardCreationState extends State<PostCardCreation>
       files: fileStringList,
       nameSurnameCreator: nameSurnameCreator,
       professionUser: professionUser,
+      owners: collaboratorIds,
     );
 
     Navigator.push(
@@ -247,7 +251,7 @@ class _PostCardCreationState extends State<PostCardCreation>
             onPressed: () => Navigator.pop(context),
           ),
           Text(
-            'Add Collaborators',
+            'Add Owners',
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
               fontSize: 20,
@@ -585,7 +589,7 @@ class _PostCardCreationState extends State<PostCardCreation>
                                   onPressed: () => Navigator.pop(context),
                                 ),
                                 const Text(
-                                  'Add Collaborators',
+                                  'Add Owners',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
@@ -1070,12 +1074,12 @@ class _PostCardCreationState extends State<PostCardCreation>
               },
             ),
           ),
-        if (_files!.isNotEmpty)
+        if (_files.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: _files!.map((file) {
+              children: _files.map((file) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Column(

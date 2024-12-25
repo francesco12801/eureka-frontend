@@ -2,14 +2,15 @@ import 'package:eureka_final_version/frontend/api/file_helper.dart';
 import 'package:eureka_final_version/frontend/api/toggle/toggle_helper.dart';
 import 'package:eureka_final_version/frontend/components/PersonalGenieFullScreenView.dart';
 import 'package:eureka_final_version/frontend/views/ProfilePage.dart';
-import 'package:flutter/material.dart';
 import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
 import 'package:eureka_final_version/frontend/components/MyStyle.dart';
 import 'package:eureka_final_version/frontend/models/constant/genie.dart';
 import 'package:eureka_final_version/frontend/models/constant/user.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:vector_math/vector_math_64.dart' as vector;
 
 class GenieCard extends StatefulWidget {
   final Genie genie;
@@ -32,12 +33,15 @@ class GenieCard extends StatefulWidget {
   _GenieCardState createState() => _GenieCardState();
 }
 
-class _GenieCardState extends State<GenieCard> {
+class _GenieCardState extends State<GenieCard>
+    with SingleTickerProviderStateMixin {
   late Future<String?> _profileImageFuture;
   late Future<List<String>> _genieImagesFuture;
   late Future<List<String>> _genieFilesFuture;
   late Future<bool> isLiked;
   late Future<bool> isSaved;
+  late AnimationController _controller;
+  bool _isPressed = false;
 
   int _likesCount = 0;
   int _savedCount = 0;
@@ -52,6 +56,10 @@ class _GenieCardState extends State<GenieCard> {
     _initializeSavedCount();
     isLiked = widget.toggleHelper.isLiked(widget.genie);
     isSaved = widget.toggleHelper.isSaved(widget.genie);
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 150),
+      vsync: this,
+    );
   }
 
   Future<void> _initializeLikesCount() async {
@@ -141,6 +149,9 @@ class _GenieCardState extends State<GenieCard> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
       onTap: () {
         Navigator.push(
           context,
@@ -162,57 +173,63 @@ class _GenieCardState extends State<GenieCard> {
           ),
         );
       },
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 18),
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.8),
-                  width: 0.2,
-                ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        transform: Matrix4.translationValues(0, _isPressed ? 2 : 0, 0)
+          ..scale(_isPressed ? 0.98 : 1.0),
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 18),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.8),
+              width: 0.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: _isPressed ? 5 : 15,
+                spreadRadius: _isPressed ? 1 : 2,
+                offset: Offset(0, _isPressed ? 2 : 4),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(),
-                    const SizedBox(height: 16),
-                    Text(
-                      widget.genie.title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: white,
-                        fontFamily: 'Roboto',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      widget.genie.description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontFamily: 'Roboto',
-                      ),
-                    ),
-                    _getImages(),
-                    _getFiles(),
-                    const SizedBox(height: 8),
-                    _buildActionBar(context),
-                  ],
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 16),
+                Text(
+                  widget.genie.title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: white,
+                    fontFamily: 'Roboto',
+                  ),
                 ),
-              ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.genie.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'Roboto',
+                  ),
+                ),
+                _getImages(),
+                _getFiles(),
+                const SizedBox(height: 8),
+                _buildActionBar(context),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

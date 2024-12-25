@@ -5,6 +5,7 @@ import 'package:eureka_final_version/frontend/api/genie/genie_helper.dart';
 import 'package:eureka_final_version/frontend/api/navigation_helper.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
 import 'package:eureka_final_version/frontend/components/CollaborationCluser.dart';
+import 'package:eureka_final_version/frontend/components/CustomRefreshIndicator.dart';
 import 'package:eureka_final_version/frontend/components/ShimmerAvatar.dart';
 import 'package:eureka_final_version/frontend/components/MyNavigationBar.dart';
 import 'package:eureka_final_version/frontend/components/MyStyle.dart';
@@ -623,12 +624,10 @@ class _NetworkPageState extends State<NetworkPage>
     return Scaffold(
       backgroundColor: primaryColor,
       body: SafeArea(
-        child: RefreshIndicator(
+        child: CustomRefreshIndicator(
           onRefresh: () async {
             await _loadCollaborations();
           },
-          color: Colors.white,
-          backgroundColor: const Color(0xFF2A2A2A),
           child: Stack(
             children: [
               CustomScrollView(
@@ -678,17 +677,10 @@ class _NetworkPageState extends State<NetworkPage>
                           ),
                         ],
                       ),
-                      child: SizedBox(
-                        width: 40,
-                        height: 40,
-                        child: LoadingIndicator(
-                          indicatorType: Indicator.ballSpinFadeLoader,
-                          colors: List.generate(
-                            8,
-                            (index) =>
-                                Colors.white.withOpacity(1 - (index * 0.1)),
-                          ),
-                        ),
+                      child: Image.asset(
+                        'assets/images/eureka_loader.gif',
+                        width: 50,
+                        height: 50,
                       ),
                     ),
                   ),

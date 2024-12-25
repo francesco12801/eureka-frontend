@@ -15,7 +15,7 @@ class Genie {
   final List<String>? videos;
   final List<String>? images;
   final List<String>? files;
-  final List<String>? collaborators;
+  final List<String>? owners;
   final List<String>? tags;
   final String? professionUser;
   final String? profileImageUser;
@@ -36,7 +36,7 @@ class Genie {
     this.videos,
     this.images,
     this.files,
-    this.collaborators,
+    this.owners,
     this.tags,
     this.professionUser,
     this.profileImageUser,
@@ -59,7 +59,7 @@ class Genie {
       videos: (data['videos'] as List<dynamic>?)?.cast<String>(),
       images: (data['images'] as List<dynamic>?)?.cast<String>(),
       files: (data['files'] as List<dynamic>?)?.cast<String>(),
-      collaborators: (data['collaborators'] as List<dynamic>?)?.cast<String>(),
+      owners: (data['owners'] as List<dynamic>?)?.cast<String>(),
       tags: (data['tags'] as List<dynamic>?)?.cast<String>(),
       professionUser: data['professionUser'] as String?, // Nullable field
       profileImageUser: data['profileImageUser'] as String?, // Nullable field
@@ -85,7 +85,7 @@ class Genie {
       'videos': videos,
       'images': images,
       'files': files,
-      'collaborators': collaborators,
+      'owners': owners,
       'tags': tags,
       'professionUser': professionUser,
       'profileImageUser': profileImageUser,
@@ -109,7 +109,7 @@ class Genie {
       videos: (json['videos'] as List<dynamic>?)?.cast<String>(),
       images: (json['images'] as List<dynamic>?)?.cast<String>(),
       files: (json['files'] as List<dynamic>?)?.cast<String>(),
-      collaborators: (json['collaborators'] as List<dynamic>?)?.cast<String>(),
+      owners: (json['owners'] as List<dynamic>?)?.cast<String>(),
       tags: (json['tags'] as List<dynamic>?)?.cast<String>(),
       professionUser: json['professionUser'] as String?,
       profileImageUser: json['profileImageUser'] as String?,
@@ -132,7 +132,7 @@ class Genie {
     List<String>? videos,
     List<String>? images,
     List<String>? files,
-    List<String>? collaborators,
+    List<String>? owners,
     List<String>? tags,
     String? professionUser,
     String? profileImageUser,
@@ -152,7 +152,7 @@ class Genie {
       videos: videos ?? this.videos,
       images: images ?? this.images,
       files: files ?? this.files,
-      collaborators: collaborators ?? this.collaborators,
+      owners: owners ?? this.owners,
       tags: tags ?? this.tags,
       professionUser: professionUser ?? this.professionUser,
       profileImageUser: profileImageUser ?? this.profileImageUser,

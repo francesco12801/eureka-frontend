@@ -119,33 +119,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  final List<PostData> posts = [
-    PostData(
-      avatar: 'assets/images/bsc.jpeg',
-      name: 'Francesco Tinessa',
-      role: 'Software Engineer',
-      time: 2,
-      title: 'App Idea',
-      content:
-          'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum is simply dummy text of the printing and typesetting industry. ',
-      likes: 2300,
-      comments: 2300,
-      saved: 3000,
-    ),
-    PostData(
-      avatar: 'assets/images/bsc.jpeg',
-      name: 'A. Franzoso',
-      role: 'Software Engineer',
-      time: 2,
-      title: 'App Idea',
-      content:
-          'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-      likes: 2300,
-      comments: 2300,
-      saved: 4000,
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -184,9 +157,9 @@ class _HomePageState extends State<HomePage> {
                           },
                         ),
                         SizedBox(
-                          height: 150,
+                          height: 80,
                           child: Image.asset(
-                            'assets/images/slogan-nobackground.png',
+                            'assets/images/slogan.png',
                             fit: BoxFit.contain,
                           ),
                         ),
