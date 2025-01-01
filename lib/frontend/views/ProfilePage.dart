@@ -222,7 +222,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             }
                           },
                         ),
-                        const ModernCalendarView(),
+                        // const ModernCalendarView(),
                         ReferencesView(
                           referencesFuture: referenceHelper.getUserReferences(),
                         ),

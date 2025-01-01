@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:eureka_final_version/frontend/api/auth/auth_api.dart';
 import 'package:eureka_final_version/frontend/api/collaborate/collaborate_manager.dart';
+import 'package:eureka_final_version/frontend/api/meeting/meeting_manager.dart';
 import 'package:eureka_final_version/frontend/api/navigation_helper.dart';
 import 'package:eureka_final_version/frontend/api/notification/notify_manager.dart';
 import 'package:eureka_final_version/frontend/api/user/user_helper.dart';
@@ -15,8 +16,6 @@ import 'package:eureka_final_version/frontend/views/LoginPage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
-import 'package:loading_indicator/loading_indicator.dart';
 
 class NotificationPage extends StatefulWidget {
   final EurekaUser userData;
@@ -30,6 +29,7 @@ class NotificationPage extends StatefulWidget {
 
 class _NotificationPageState extends State<NotificationPage> {
   final AuthHelper authHelper = AuthHelper();
+  final MeetingManager meetingManager = MeetingManager();
   final _secureStorage = const FlutterSecureStorage();
   int _selectedTabIndex = 0;
   bool isLoading = true;
@@ -366,7 +366,8 @@ class _NotificationPageState extends State<NotificationPage> {
               .where((notification) =>
                   notification.type == 'COLLABORATION_REQUEST' ||
                   notification.type == 'COLLAB_ACCEPTED' ||
-                  notification.type == 'COLLAB_DECLINED')
+                  notification.type == 'COLLAB_DECLINED' ||
+                  notification.type == 'MEETING_REQUEST')
               .toList();
           break;
         case 2: // Unread
@@ -530,6 +531,182 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 
   Widget _buildNotificationTile(NotificationEureka notification) {
+    if (notification.type == 'MEETING_REQUEST') {
+      final bool isOwner = notification.fromUserId == widget.userData.uid;
+
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.purple.withOpacity(0.3),
+            width: 2,
+          ),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.white.withOpacity(0.1),
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: !notification.read
+                          ? Border.all(color: Colors.purple.shade400, width: 2)
+                          : null,
+                    ),
+                    child: FutureBuilder<String?>(
+                      future: widget.userHelper
+                          .getPublicProfileImage(notification.fromUserId),
+                      builder: (context, snapshot) {
+                        return CircleAvatar(
+                          radius: 30,
+                          backgroundImage: snapshot.hasData
+                              ? NetworkImage(snapshot.data!)
+                              : null,
+                          backgroundColor: Colors.grey.withOpacity(0.5),
+                          child: !snapshot.hasData
+                              ? const Icon(Icons.person, color: Colors.white)
+                              : null,
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                notification.title,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.purple.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    CupertinoIcons.calendar,
+                                    color: Colors.purple,
+                                    size: 14,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Meeting',
+                                    style: TextStyle(
+                                      color: Colors.purple,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          notification.body,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _formatTimestamp(notification.createdAt),
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.5),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isOwner) // Solo il proprietario può modificare o eliminare
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.withOpacity(0.2),
+                          foregroundColor: Colors.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onPressed: () {
+                          // Qui la logica per modificare il meeting
+                          _showScheduleCallDialog(context, notification);
+                        },
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(CupertinoIcons.pencil),
+                            SizedBox(width: 8),
+                            Text('Modify'),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.withOpacity(0.2),
+                          foregroundColor: Colors.red,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onPressed: () => _deleteNotification(notification),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(CupertinoIcons.trash),
+                            SizedBox(width: 8),
+                            Text('Delete'),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      );
+    }
     if (notification.type == 'COLLABORATION_REQUEST') {
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -721,7 +898,8 @@ class _NotificationPageState extends State<NotificationPage> {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  onPressed: () => _showScheduleCallDialog(context),
+                  onPressed: () =>
+                      _showScheduleCallDialog(context, notification),
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -741,6 +919,7 @@ class _NotificationPageState extends State<NotificationPage> {
         ),
       );
     }
+
     return Dismissible(
       key: ValueKey(
           '${notification.id}_${notification.read}_${notification.createdAt}'),
@@ -1040,7 +1219,8 @@ class _NotificationPageState extends State<NotificationPage> {
     }
   }
 
-  void _showScheduleCallDialog(BuildContext context) {
+  void _showScheduleCallDialog(
+      BuildContext context, NotificationEureka notificationData) {
     DateTime selectedDate = DateTime.now();
     TimeOfDay selectedTime = TimeOfDay.now();
     final titleController = TextEditingController();
@@ -1077,8 +1257,8 @@ class _NotificationPageState extends State<NotificationPage> {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          const Color(0xFF6366F1).withOpacity(0.2),
-                          const Color(0xFF8B5CF6).withOpacity(0.2),
+                          Colors.blue.withOpacity(0.2),
+                          Colors.blueAccent.withOpacity(0.2),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(14),
@@ -1165,7 +1345,7 @@ class _NotificationPageState extends State<NotificationPage> {
                           builder: (context, child) => Theme(
                             data: Theme.of(context).copyWith(
                               colorScheme: const ColorScheme.dark(
-                                primary: Color(0xFF8B5CF6),
+                                primary: Colors.blue,
                                 surface: Color(0xFF1A1A1A),
                                 onSurface: Colors.white,
                               ),
@@ -1298,23 +1478,273 @@ class _NotificationPageState extends State<NotificationPage> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                    colors: [Colors.blue, Colors.blueAccent],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF6366F1).withOpacity(0.3),
+                      color: Colors.blue.withOpacity(0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Implement scheduling logic
-                    Navigator.pop(context);
+                  onPressed: () async {
+                    try {
+                      await _markAsRead(notificationData);
+                      // Mostra loading spinner
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (BuildContext context) {
+                          return Stack(
+                            children: [
+                              BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                                child: Container(
+                                  color: Colors.black.withOpacity(0.2),
+                                ),
+                              ),
+                              Center(
+                                child: Container(
+                                  padding: const EdgeInsets.all(24),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF1A1A1A),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.1),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.2),
+                                        blurRadius: 12,
+                                        spreadRadius: 1,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Image.asset(
+                                        'assets/images/eureka_loader.gif',
+                                        width: 60,
+                                        height: 60,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'Get ready for an amazing collaboration!',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.7),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+
+                      // Validazione input
+                      if (titleController.text.isEmpty) {
+                        throw Exception('Il titolo è obbligatorio');
+                      }
+
+                      String formattedDay =
+                          "${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}";
+                      String formattedTime =
+                          "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}";
+
+                      // Debug logs
+                      debugPrint(
+                          '------------- DEBUG MEETING CREATION -------------');
+                      debugPrint('GuestId: ${notificationData.fromUserId}');
+                      debugPrint('Infos: ${descriptionController.text}');
+                      debugPrint('Time: $formattedTime');
+                      debugPrint('Day: $formattedDay');
+                      debugPrint('Title: ${titleController.text}');
+                      debugPrint(
+                          'Collaborators: [${notificationData.fromUserId}, ${widget.userData.uid}]');
+                      debugPrint('GenieId: ${notificationData.genieID}');
+                      debugPrint(
+                          '-----------------------------------------------');
+
+                      // Usa l'istanza invece del metodo statico
+                      final result = await MeetingManager.createMeeting(
+                          notificationData.fromUserId,
+                          descriptionController.text,
+                          formattedTime,
+                          formattedDay,
+                          titleController.text,
+                          [notificationData.fromUserId, widget.userData.uid],
+                          notificationData.genieID!,
+                          notificationData.collaborationId!);
+
+                      debugPrint('Meeting creation result: $result');
+
+                      setState(() {
+                        notifications
+                            .removeWhere((n) => n.id == notificationData.id);
+                        _filterNotifications(_selectedTabIndex);
+                      });
+
+                      // Chiudi loading spinner e dialog
+                      Navigator.of(context).pop(); // chiude loading
+                      Navigator.of(context).pop(); // chiude dialog
+
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            backgroundColor: Colors.transparent,
+                            child: Container(
+                              width: MediaQuery.of(context).size.width * 0.85,
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    const Color(0xFF1A1A1A),
+                                    const Color(0xFF1A1A1A).withOpacity(0.95),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(28),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.1),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.5),
+                                    blurRadius: 20,
+                                    spreadRadius: 5,
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Icona animata di successo
+                                  Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.celebration,
+                                      color: Colors.green,
+                                      size: 40,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+
+                                  // Titolo
+                                  const Text(
+                                    'Meeting Scheduled! 🎉',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Messaggio motivazionale
+                                  Text(
+                                    'Get ready for an amazing collaboration! Your meeting is all set for ${selectedTime.format(context)} on ${selectedDate.day}/${selectedDate.month}.',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.8),
+                                      fontSize: 16,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  Text(
+                                    'Pro tip: Take a moment to prepare your ideas and make the most of this opportunity! 💡',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.6),
+                                      fontSize: 14,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 32),
+
+                                  // Pulsante di chiusura
+                                  Container(
+                                    width: double.infinity,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Colors.green,
+                                          Colors.greenAccent
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.green.withOpacity(0.3),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ElevatedButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.transparent,
+                                        shadowColor: Colors.transparent,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        "I'm Ready!",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    } catch (e, stackTrace) {
+                      debugPrint('------------- ERROR DETAILS -------------');
+                      debugPrint('Error: $e');
+                      debugPrint('StackTrace: $stackTrace');
+                      debugPrint('----------------------------------------');
+
+                      // Chiudi loading spinner se aperto
+                      if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      }
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                              'Errore durante la creazione del meeting: ${e.toString()}'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,

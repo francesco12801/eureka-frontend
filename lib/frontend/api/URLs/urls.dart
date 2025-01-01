@@ -11,9 +11,14 @@ class UrlManager {
   static String modifyProfileURL = dotenv.env['SPRING_API_EDIT_PROFILE'] ?? '';
   static String commentURL = dotenv.env['COMMENT_API_URL'] ?? '';
   static String middlewareURL = dotenv.env['MIDDLEWARE_API_URL'] ?? '';
+  static String meetingURL = dotenv.env['MEETING_API_URL'] ?? '';
 
   static String getCollabURL() {
     return collabURL;
+  }
+
+  static String getMeetingURL() {
+    return meetingURL;
   }
 
   static String getCommentURL() {
