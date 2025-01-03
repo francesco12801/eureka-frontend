@@ -395,7 +395,7 @@ class _NetworkPageState extends State<NetworkPage>
             children: [
               Text(
                 cluster.genieName ?? 'Genie ${cluster.genieId}',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
