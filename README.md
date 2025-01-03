@@ -1,7 +1,5 @@
 # eureka_final_version
 
-A new Flutter project.
-
 ## Introduction
 
 Eureka is a groundbreaking mobile application tailored for entrepreneurs, researchers,
